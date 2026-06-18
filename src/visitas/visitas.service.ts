@@ -5,11 +5,20 @@ import { Visita } from './entities/visita.entity';
 import { CreateVisitaDto } from './dto/create-visita.dto';
 import { UpdateVisitaDto } from './dto/update-visita.dto';
 import { EstadoVisita } from '../common/enums/estado-visita.enum';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+
+const TIPO_LABELS: Record<string, string> = {
+  visita_tecnica_fv: 'Visita Técnica FV',
+  visita_tecnica_aerotermia: 'Visita Técnica Aerotermia',
+  instalacion_nueva_fv: 'Instalación Nueva FV',
+  instalacion_nueva_aerotermia: 'Instalación Nueva Aerotermia',
+};
 
 @Injectable()
 export class VisitasService {
   constructor(
     @InjectRepository(Visita) private repo: Repository<Visita>,
+    private readonly notifications: NotificationsGateway,
   ) {}
 
   async create(dto: CreateVisitaDto): Promise<Visita> {
@@ -25,7 +34,20 @@ export class VisitasService {
     if (conflicto) {
       throw new ConflictException('El técnico ya tiene una visita asignada en esa franja horaria');
     }
-    return this.repo.save(this.repo.create(dto));
+    const saved = await this.repo.save(this.repo.create(dto));
+
+    // Recargar con relaciones eager para la notificación
+    const visita = await this.repo.findOne({ where: { id: saved.id } });
+    if (visita) {
+      this.notifications.notifyUser(dto.tecnico_id, 'nueva-visita', {
+        visitaId: visita.id,
+        instalacionNombre: visita.instalacion?.nombre ?? '—',
+        instalacionDireccion: visita.instalacion?.direccion ?? '',
+        fechaProgramada: visita.fechaProgramada.toISOString(),
+        tipo: TIPO_LABELS[visita.tipo] ?? visita.tipo,
+      });
+    }
+    return saved;
   }
 
   findAll(): Promise<Visita[]> {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
 import { InstalacionesModule } from './instalaciones/instalaciones.module';
 import { VisitasModule } from './visitas/visitas.module';
@@ -47,6 +48,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     FotosModule,
     IncidenciasModule,
     ChecklistsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
