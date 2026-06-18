@@ -28,7 +28,7 @@ export class Informe {
   @Column({ type: 'int', nullable: true, comment: 'minutos' })
   tiempoEmpleado: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   firmaClienteUrl: string;
 
   @Column({ nullable: true })
