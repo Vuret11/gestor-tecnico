@@ -11,7 +11,10 @@ async function bootstrap() {
   if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads',
+    setHeaders: (res) => { res.setHeader('Access-Control-Allow-Origin', '*'); },
+  });
 
   app.setGlobalPrefix('api/v1');
 
