@@ -36,7 +36,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
         password: config.get('DB_PASS', 'postgres'),
         database: config.get('DB_NAME', 'gestor_tecnico'),
         entities: [User, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta],
-        synchronize: config.get('NODE_ENV') !== 'production',
+        synchronize: config.get('DB_SYNC') === 'true' || config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
       }),
     }),
