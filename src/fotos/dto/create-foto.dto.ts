@@ -7,9 +7,9 @@ export class CreateFotoDto {
   @IsUUID()
   visita_id: string;
 
-  @ApiProperty()
-  @IsNotEmpty() @IsString()
-  url: string;
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  url?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString()
   thumbnail?: string;
