@@ -1,0 +1,122 @@
+{
+  "nombre": "Informe Visita - Instalaciones Fotovoltaicas",
+  "descripcion": "Checklist completo para replanteo e informe de instalaciones fotovoltaicas",
+  "secciones": [
+    {
+      "titulo": "Datos del Cliente",
+      "orden": 0,
+      "items": [
+        {"etiqueta": "Nombre y apellidos", "tipo": "text", "obligatorio": true, "orden": 0},
+        {"etiqueta": "Telefono / Movil", "tipo": "text", "obligatorio": true, "orden": 1},
+        {"etiqueta": "Municipio", "tipo": "text", "obligatorio": true, "orden": 2},
+        {"etiqueta": "Provincia", "tipo": "text", "obligatorio": false, "orden": 3},
+        {"etiqueta": "Codigo Postal", "tipo": "text", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Direccion", "tipo": "text", "obligatorio": true, "orden": 5},
+        {"etiqueta": "Compania Electrica", "tipo": "text", "obligatorio": false, "orden": 6},
+        {"etiqueta": "Observaciones", "tipo": "textarea", "obligatorio": false, "orden": 7}
+      ]
+    },
+    {
+      "titulo": "Datos Generales de la Instalacion",
+      "orden": 1,
+      "items": [
+        {"etiqueta": "Modalidad de autoconsumo", "tipo": "select", "opciones": ["Con excedentes", "Sin excedentes"], "obligatorio": true, "orden": 0},
+        {"etiqueta": "Potencia Nominal de la Instalacion (KW)", "tipo": "number", "unidad": "KW", "obligatorio": true, "orden": 1},
+        {"etiqueta": "Tipo de instalacion", "tipo": "select", "opciones": ["Coplanar", "Inclinada"], "obligatorio": true, "orden": 2},
+        {"etiqueta": "Numero de paneles", "tipo": "number", "obligatorio": true, "orden": 3},
+        {"etiqueta": "Inversor (modelo)", "tipo": "text", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Baterias", "tipo": "boolean", "obligatorio": false, "orden": 5},
+        {"etiqueta": "Tecnico / Cuadrilla", "tipo": "text", "obligatorio": true, "orden": 6}
+      ]
+    },
+    {
+      "titulo": "Inversor",
+      "orden": 2,
+      "items": [
+        {"etiqueta": "Ubicacion del inversor", "tipo": "textarea", "obligatorio": false, "orden": 0},
+        {"etiqueta": "Modelo del inversor", "tipo": "text", "obligatorio": false, "orden": 1},
+        {"etiqueta": "Observaciones", "tipo": "textarea", "obligatorio": false, "orden": 2},
+        {"etiqueta": "FOTO: Ubicacion inversor y cuadro de protecciones FV", "tipo": "photo", "obligatorio": false, "orden": 3}
+      ]
+    },
+    {
+      "titulo": "Cableado AC para Backup",
+      "orden": 3,
+      "items": [
+        {"etiqueta": "Metros desde CGPM hasta inversor", "tipo": "number", "unidad": "m", "obligatorio": false, "orden": 0},
+        {"etiqueta": "Metros desde CGPM hasta cuadro FV", "tipo": "number", "unidad": "m", "obligatorio": false, "orden": 1},
+        {"etiqueta": "Ubicacion backup: en el CGPM", "tipo": "boolean", "obligatorio": false, "orden": 2},
+        {"etiqueta": "Ubicacion backup: cerca del cuadro FV", "tipo": "boolean", "obligatorio": false, "orden": 3},
+        {"etiqueta": "Canalizacion existente admite conductores adicionales", "tipo": "boolean", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Se puede sustituir automaticos por DPN", "tipo": "boolean", "obligatorio": false, "orden": 5},
+        {"etiqueta": "Numero de automaticos a cambiar y calibre", "tipo": "text", "obligatorio": false, "orden": 6},
+        {"etiqueta": "Senal WiFi en ubicacion del Gateway", "tipo": "select", "opciones": ["Si", "No"], "obligatorio": false, "orden": 7},
+        {"etiqueta": "Observaciones", "tipo": "textarea", "obligatorio": false, "orden": 8},
+        {"etiqueta": "FOTO: Trazado cableado AC", "tipo": "photo", "obligatorio": false, "orden": 9}
+      ]
+    },
+    {
+      "titulo": "Cuadro General",
+      "orden": 4,
+      "items": [
+        {"etiqueta": "Instalacion monofasica o trifasica", "tipo": "select", "opciones": ["Monofasica", "Trifasica"], "obligatorio": true, "orden": 0},
+        {"etiqueta": "Tension L1-L2", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 1},
+        {"etiqueta": "Tension L1-L3", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 2},
+        {"etiqueta": "Tension L2-L3", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 3},
+        {"etiqueta": "Tension L1-N", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Tension L2-N", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 5},
+        {"etiqueta": "Tension L3-N", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 6},
+        {"etiqueta": "Hay espacio en el cuadro para el backup", "tipo": "boolean", "obligatorio": false, "orden": 7},
+        {"etiqueta": "Amperaje interruptor general", "tipo": "number", "unidad": "A", "obligatorio": false, "orden": 8},
+        {"etiqueta": "Fuga a tierra", "tipo": "number", "unidad": "mA", "obligatorio": false, "orden": 9},
+        {"etiqueta": "Diferencial general", "tipo": "number", "unidad": "mA", "obligatorio": false, "orden": 10},
+        {"etiqueta": "Diferencial FV", "tipo": "number", "unidad": "mA", "obligatorio": false, "orden": 11},
+        {"etiqueta": "Resistencia aislamiento circuito FV", "tipo": "number", "unidad": "ohm", "obligatorio": false, "orden": 12},
+        {"etiqueta": "Resistencia aislamiento circuito receptores", "tipo": "number", "unidad": "ohm", "obligatorio": false, "orden": 13},
+        {"etiqueta": "Tension L1-T", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 14},
+        {"etiqueta": "Tension L2-T", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 15},
+        {"etiqueta": "Tension L3-T", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 16},
+        {"etiqueta": "Tension T-N", "tipo": "number", "unidad": "V", "obligatorio": false, "orden": 17},
+        {"etiqueta": "Observaciones", "tipo": "textarea", "obligatorio": false, "orden": 18},
+        {"etiqueta": "FOTO: Cuadro general abierto", "tipo": "photo", "obligatorio": false, "orden": 19}
+      ]
+    },
+    {
+      "titulo": "Baterias",
+      "orden": 5,
+      "items": [
+        {"etiqueta": "Ubicacion de baterias", "tipo": "select", "opciones": ["Fijadas a la pared", "Sobre el suelo"], "obligatorio": false, "orden": 0},
+        {"etiqueta": "Dimensiones del espacio disponible", "tipo": "text", "obligatorio": false, "orden": 1},
+        {"etiqueta": "Trazado del cableado de baterias", "tipo": "textarea", "obligatorio": false, "orden": 2},
+        {"etiqueta": "Tipo de canalizacion interior", "tipo": "text", "obligatorio": false, "orden": 3},
+        {"etiqueta": "Dimensiones de la canalizacion", "tipo": "text", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Metros de canalizacion", "tipo": "number", "unidad": "m", "obligatorio": false, "orden": 5},
+        {"etiqueta": "Elementos de proteccion adicionales", "tipo": "boolean", "obligatorio": false, "orden": 6},
+        {"etiqueta": "Observaciones", "tipo": "textarea", "obligatorio": false, "orden": 7},
+        {"etiqueta": "FOTO: Ubicacion baterias", "tipo": "photo", "obligatorio": false, "orden": 8}
+      ]
+    },
+    {
+      "titulo": "Acceso y Material",
+      "orden": 6,
+      "items": [
+        {"etiqueta": "Conexion WiFi disponible", "tipo": "select", "opciones": ["Si", "No"], "obligatorio": false, "orden": 0},
+        {"etiqueta": "Izado de material", "tipo": "text", "obligatorio": false, "orden": 1},
+        {"etiqueta": "Acopio de material", "tipo": "text", "obligatorio": false, "orden": 2},
+        {"etiqueta": "Acceso a cubierta", "tipo": "textarea", "obligatorio": false, "orden": 3},
+        {"etiqueta": "Sombras", "tipo": "textarea", "obligatorio": false, "orden": 4},
+        {"etiqueta": "Linea de vida", "tipo": "text", "obligatorio": false, "orden": 5},
+        {"etiqueta": "Tipo de cubierta o cimentacion", "tipo": "text", "obligatorio": false, "orden": 6},
+        {"etiqueta": "Estado de la teja", "tipo": "text", "obligatorio": false, "orden": 7},
+        {"etiqueta": "Elementos en tejado", "tipo": "textarea", "obligatorio": false, "orden": 8},
+        {"etiqueta": "Hace falta elevador", "tipo": "select", "opciones": ["Si", "No"], "obligatorio": false, "orden": 9},
+        {"etiqueta": "Hace falta medios de descarga", "tipo": "select", "opciones": ["Si", "No"], "obligatorio": false, "orden": 10},
+        {"etiqueta": "Licencia ocupacion Via Publica", "tipo": "select", "opciones": ["Si", "No"], "obligatorio": false, "orden": 11},
+        {"etiqueta": "Descripcion de la necesidad", "tipo": "textarea", "obligatorio": false, "orden": 12},
+        {"etiqueta": "CC y canalizacion", "tipo": "text", "obligatorio": false, "orden": 13},
+        {"etiqueta": "AC y canalizacion", "tipo": "text", "obligatorio": false, "orden": 14},
+        {"etiqueta": "Pasa muros CC y AC", "tipo": "text", "obligatorio": false, "orden": 15}
+      ]
+    }
+  ]
+}
