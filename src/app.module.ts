@@ -38,6 +38,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
         entities: [User, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta],
         synchronize: config.get('DB_SYNC') === 'true' || config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
+        ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
       }),
     }),
     AuthModule,
