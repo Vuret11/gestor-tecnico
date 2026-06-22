@@ -39,4 +39,7 @@ export class CreateInstalacionDto {
 
   @ApiPropertyOptional() @IsOptional() @IsString()
   notas?: string;
+
+  @ApiPropertyOptional() @IsOptional() @IsString()
+  clienteId?: string;
 }

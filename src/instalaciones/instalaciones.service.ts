@@ -31,6 +31,10 @@ export class InstalacionesService {
     return this.repo.save(inst);
   }
 
+  findByCliente(clienteId: string): Promise<Instalacion[]> {
+    return this.repo.find({ where: { clienteId, activo: true }, order: { nombre: 'ASC' } });
+  }
+
   async remove(id: string): Promise<void> {
     const inst = await this.findOne(id);
     inst.activo = false;

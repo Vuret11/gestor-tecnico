@@ -30,6 +30,12 @@ export class InstalacionesController {
     return this.service.findAll();
   }
 
+  @ApiOperation({ summary: 'Instalaciones de un cliente' })
+  @Get('by-cliente/:clienteId')
+  findByCliente(@Param('clienteId') clienteId: string) {
+    return this.service.findByCliente(clienteId);
+  }
+
   @ApiOperation({ summary: 'Obtener instalación por ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {

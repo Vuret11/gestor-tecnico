@@ -10,12 +10,14 @@ import { InformesModule } from './informes/informes.module';
 import { FotosModule } from './fotos/fotos.module';
 import { IncidenciasModule } from './incidencias/incidencias.module';
 import { ChecklistsModule } from './checklists/checklists.module';
+import { ClientesModule } from './clientes/clientes.module';
 import { User } from './users/entities/user.entity';
 import { Instalacion } from './instalaciones/entities/instalacion.entity';
 import { Visita } from './visitas/entities/visita.entity';
 import { Informe } from './informes/entities/informe.entity';
 import { Foto } from './fotos/entities/foto.entity';
 import { Incidencia } from './incidencias/entities/incidencia.entity';
+import { Cliente } from './clientes/entities/cliente.entity';
 import { ChecklistPlantilla } from './checklists/entities/checklist-plantilla.entity';
 import { ChecklistSeccion } from './checklists/entities/checklist-seccion.entity';
 import { ChecklistItem } from './checklists/entities/checklist-item.entity';
@@ -35,7 +37,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
         username: config.get('DB_USER', 'postgres'),
         password: config.get('DB_PASS', 'postgres'),
         database: config.get('DB_NAME', 'gestor_tecnico'),
-        entities: [User, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta],
+        entities: [User, Cliente, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta],
         synchronize: config.get('DB_SYNC') === 'true' || config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
         ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
@@ -49,6 +51,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     FotosModule,
     IncidenciasModule,
     ChecklistsModule,
+    ClientesModule,
     NotificationsModule,
   ],
 })
