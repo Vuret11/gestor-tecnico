@@ -25,6 +25,12 @@ export class CreateFotoDto {
   @ApiPropertyOptional() @IsOptional() @IsString()
   descripcion?: string;
 
+  @ApiPropertyOptional() @IsOptional() @IsString()
+  nombre?: string;
+
+  @ApiPropertyOptional() @IsOptional() @IsString()
+  tipo?: string;
+
   @ApiPropertyOptional() @IsOptional() @IsUUID()
   informe_id?: string;
 }

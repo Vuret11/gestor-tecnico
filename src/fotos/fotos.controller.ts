@@ -59,7 +59,7 @@ export class FotosController {
       if (useCloudinary) {
         const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: 'gestor-tecnico' },
+            { folder: 'gestor-tecnico', resource_type: 'auto' },
             (error, res) => {
               if (error || !res) reject(error ?? new Error('Cloudinary upload failed'));
               else resolve(res);
@@ -73,7 +73,9 @@ export class FotosController {
       }
     }
 
-    return this.service.create({ ...dto, url });
+    const nombre = dto.nombre ?? file?.originalname ?? undefined;
+    const tipo = dto.tipo ?? (file?.mimetype?.startsWith('image/') ? 'foto' : 'documento');
+    return this.service.create({ ...dto, url, nombre, tipo });
   }
 
   @ApiOperation({ summary: 'Fotos de una visita' })

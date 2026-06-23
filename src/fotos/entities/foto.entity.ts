@@ -20,6 +20,12 @@ export class Foto {
   url: string;
 
   @Column({ nullable: true })
+  nombre: string;
+
+  @Column({ default: 'foto' })
+  tipo: string;
+
+  @Column({ nullable: true })
   thumbnail: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
