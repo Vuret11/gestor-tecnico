@@ -1,7 +1,14 @@
+databases:
+  - name: gestor-tecnico-db
+    databaseName: gestor_tecnico
+    user: gestor_user
+    plan: free
+
 services:
   - type: web
     name: gestor-tecnico-api
     runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
     envVars:
@@ -10,21 +17,31 @@ services:
       - key: PORT
         value: 3000
       - key: DB_HOST
-        sync: false
+        fromDatabase:
+          name: gestor-tecnico-db
+          property: host
       - key: DB_PORT
-        sync: false
+        fromDatabase:
+          name: gestor-tecnico-db
+          property: port
       - key: DB_USER
-        sync: false
+        fromDatabase:
+          name: gestor-tecnico-db
+          property: user
       - key: DB_PASS
-        sync: false
+        fromDatabase:
+          name: gestor-tecnico-db
+          property: password
       - key: DB_NAME
-        sync: false
+        fromDatabase:
+          name: gestor-tecnico-db
+          property: database
       - key: JWT_SECRET
-        sync: false
+        value: SScPVWSSnnci1l5qzQV/4vCaTNkziA9Bp61904+ByYoya2dz6sHhtqil18UVB9xV
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: CORS_ORIGIN
-        sync: false
+        value: https://gestor-tecnico-dashboard.vercel.app
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
