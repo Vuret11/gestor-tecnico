@@ -11,8 +11,9 @@ export class InstalacionesService {
     @InjectRepository(Instalacion) private repo: Repository<Instalacion>,
   ) {}
 
-  create(dto: CreateInstalacionDto): Promise<Instalacion> {
-    return this.repo.save(this.repo.create(dto));
+  async create(dto: CreateInstalacionDto): Promise<Instalacion> {
+    const saved = await this.repo.save(this.repo.create(dto));
+    return this.findOne(saved.id);
   }
 
   findAll(): Promise<Instalacion[]> {
@@ -28,7 +29,8 @@ export class InstalacionesService {
   async update(id: string, dto: UpdateInstalacionDto): Promise<Instalacion> {
     const inst = await this.findOne(id);
     Object.assign(inst, dto);
-    return this.repo.save(inst);
+    await this.repo.save(inst);
+    return this.findOne(id);
   }
 
   findByCliente(clienteId: string): Promise<Instalacion[]> {

@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
@@ -11,6 +13,7 @@ import { FotosModule } from './fotos/fotos.module';
 import { IncidenciasModule } from './incidencias/incidencias.module';
 import { ChecklistsModule } from './checklists/checklists.module';
 import { ClientesModule } from './clientes/clientes.module';
+import { StatsModule } from './stats/stats.module';
 import { User } from './users/entities/user.entity';
 import { Instalacion } from './instalaciones/entities/instalacion.entity';
 import { Visita } from './visitas/entities/visita.entity';
@@ -27,6 +30,9 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      { name: 'global', ttl: 60_000, limit: 120 },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -52,7 +58,11 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     IncidenciasModule,
     ChecklistsModule,
     ClientesModule,
+    StatsModule,
     NotificationsModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

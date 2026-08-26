@@ -12,6 +12,13 @@ export interface VisitaNotificacion {
   tipo: string;
 }
 
+export interface IncidenciaNotificacion {
+  incidenciaId: string;
+  titulo: string;
+  prioridad: string;
+  instalacionNombre: string;
+}
+
 @WebSocketGateway({ cors: { origin: '*' }, namespace: '/' })
 export class NotificationsGateway {
   @WebSocketServer() server: Server;
@@ -28,7 +35,7 @@ export class NotificationsGateway {
     });
   }
 
-  notifyUser(userId: string, event: string, payload: VisitaNotificacion) {
+  notifyUser(userId: string, event: string, payload: object) {
     const sockets = this.userSockets.get(userId);
     if (!sockets?.size) return;
     sockets.forEach(socketId => {

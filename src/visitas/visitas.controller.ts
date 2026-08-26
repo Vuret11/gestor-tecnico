@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query,
+  Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { VisitasService } from './visitas.service';
 import { CreateVisitaDto } from './dto/create-visita.dto';
@@ -49,6 +50,23 @@ export class VisitasController {
   @Get('mis-visitas')
   misVisitas(@CurrentUser() user: any) {
     return this.service.findByTecnico(user.id);
+  }
+
+  @ApiOperation({ summary: 'Exportar visitas a CSV (rango opcional)' })
+  @Roles(Rol.ADMIN, Rol.OFICINA)
+  @Get('export/csv')
+  async exportCsv(
+    @Query('desde') desde: string,
+    @Query('hasta') hasta: string,
+    @Res() res: Response,
+  ) {
+    const csv = await this.service.exportCsv(
+      desde ? new Date(desde) : undefined,
+      hasta ? new Date(hasta) : undefined,
+    );
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="visitas-${Date.now()}.csv"`);
+    res.send(csv);
   }
 
   @ApiOperation({ summary: 'Obtener visita por ID' })

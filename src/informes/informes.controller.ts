@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { InformesService } from './informes.service';
 import { CreateInformeDto } from './dto/create-informe.dto';
@@ -23,6 +24,15 @@ export class InformesController {
     return this.service.findAll();
   }
 
+  @ApiOperation({ summary: 'Exportar informes a CSV' })
+  @Get('export/csv')
+  async exportCsv(@Res() res: Response) {
+    const csv = await this.service.exportCsv();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="informes-${Date.now()}.csv"`);
+    res.send(csv);
+  }
+
   @ApiOperation({ summary: 'Obtener informe por ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -39,5 +49,11 @@ export class InformesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: Partial<CreateInformeDto>) {
     return this.service.update(id, dto);
+  }
+
+  @ApiOperation({ summary: 'Generar PDF del informe y guardar URL' })
+  @Post(':id/pdf')
+  generatePdf(@Param('id') id: string) {
+    return this.service.generatePdf(id);
   }
 }

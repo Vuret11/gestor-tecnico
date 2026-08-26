@@ -1,7 +1,8 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  UpdateDateColumn, OneToMany,
+  UpdateDateColumn, ManyToOne, JoinColumn,
 } from 'typeorm';
+import { Cliente } from '../../clientes/entities/cliente.entity';
 
 @Entity('instalaciones')
 export class Instalacion {
@@ -11,7 +12,8 @@ export class Instalacion {
   @Column()
   nombre: string;
 
-  @Column()
+  // Nombre libre (legado). Nullable cuando la instalación está vinculada via clienteId.
+  @Column({ nullable: true })
   cliente: string;
 
   @Column()
@@ -40,6 +42,10 @@ export class Instalacion {
 
   @Column({ type: 'text', nullable: true })
   notas: string;
+
+  @ManyToOne(() => Cliente, { eager: true, nullable: true })
+  @JoinColumn({ name: 'clienteId' })
+  clienteData: Cliente;
 
   @Column({ nullable: true })
   clienteId: string;

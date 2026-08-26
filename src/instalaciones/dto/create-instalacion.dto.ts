@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -7,9 +7,9 @@ export class CreateInstalacionDto {
   @IsNotEmpty() @IsString()
   nombre: string;
 
-  @ApiProperty({ example: 'Meridiano S.L.' })
-  @IsNotEmpty() @IsString()
-  cliente: string;
+  @ApiPropertyOptional({ example: 'Meridiano S.L.', description: 'Nombre libre (legado). Usar clienteId para vincular un cliente del sistema.' })
+  @IsOptional() @IsString()
+  cliente?: string;
 
   @ApiProperty({ example: 'Calle Mayor 1' })
   @IsNotEmpty() @IsString()
@@ -40,6 +40,6 @@ export class CreateInstalacionDto {
   @ApiPropertyOptional() @IsOptional() @IsString()
   notas?: string;
 
-  @ApiPropertyOptional() @IsOptional() @IsString()
+  @ApiPropertyOptional() @IsOptional() @IsUUID()
   clienteId?: string;
 }

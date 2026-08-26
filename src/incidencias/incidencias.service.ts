@@ -5,15 +5,22 @@ import { Incidencia } from './entities/incidencia.entity';
 import { CreateIncidenciaDto } from './dto/create-incidencia.dto';
 import { UpdateIncidenciaDto } from './dto/update-incidencia.dto';
 import { EstadoIncidencia } from '../common/enums/prioridad.enum';
+import { NotificationsGateway, IncidenciaNotificacion } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class IncidenciasService {
   constructor(
     @InjectRepository(Incidencia) private repo: Repository<Incidencia>,
+    private readonly notifications: NotificationsGateway,
   ) {}
 
-  create(dto: CreateIncidenciaDto, creadoPorId: string): Promise<Incidencia> {
-    return this.repo.save(this.repo.create({ ...dto, creado_por_id: creadoPorId }));
+  async create(dto: CreateIncidenciaDto, creadoPorId: string): Promise<Incidencia> {
+    const saved = await this.repo.save(this.repo.create({ ...dto, creado_por_id: creadoPorId }));
+    const inc = await this.findOne(saved.id);
+    if (inc.asignado_a_id) {
+      this.notifications.notifyUser(inc.asignado_a_id, 'incidencia-asignada', this.buildPayload(inc));
+    }
+    return inc;
   }
 
   findAll(): Promise<Incidencia[]> {
@@ -37,12 +44,34 @@ export class IncidenciasService {
   }
 
   async update(id: string, dto: UpdateIncidenciaDto): Promise<Incidencia> {
+    const anterior = await this.findOne(id);
+    const tecnicoCambia = !!dto.asignado_a_id && dto.asignado_a_id !== anterior.asignado_a_id;
+    const tecnicoAnteriorId = anterior.asignado_a_id;
+
+    Object.assign(anterior, dto);
+    await this.repo.save(anterior);
     const inc = await this.findOne(id);
-    Object.assign(inc, dto);
-    return this.repo.save(inc);
+
+    if (tecnicoCambia) {
+      if (tecnicoAnteriorId) {
+        this.notifications.notifyUser(tecnicoAnteriorId, 'incidencia-desasignada', this.buildPayload(inc));
+      }
+      this.notifications.notifyUser(inc.asignado_a_id!, 'incidencia-asignada', this.buildPayload(inc));
+    }
+
+    return inc;
   }
 
   async cerrar(id: string, resolucion: string): Promise<Incidencia> {
     return this.update(id, { estado: EstadoIncidencia.CERRADA, resolucion });
+  }
+
+  private buildPayload(inc: Incidencia): IncidenciaNotificacion {
+    return {
+      incidenciaId: inc.id,
+      titulo: inc.titulo,
+      prioridad: inc.prioridad,
+      instalacionNombre: inc.instalacion?.nombre ?? '—',
+    };
   }
 }
