@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail, IsUUID, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -42,4 +42,8 @@ export class CreateInstalacionDto {
 
   @ApiPropertyOptional() @IsOptional() @IsUUID()
   clienteId?: string;
+
+  @ApiPropertyOptional({ enum: ['fv', 'rite', 'otro'] })
+  @IsOptional() @IsString() @IsIn(['fv', 'rite', 'otro'])
+  tipoInstalacion?: string;
 }
