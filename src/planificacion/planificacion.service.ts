@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { PlanProvincia } from './entities/plan-provincia.entity';
 import { PlanTecnico } from './entities/plan-tecnico.entity';
 import { PlanCliente } from './entities/plan-cliente.entity';
@@ -89,6 +90,66 @@ export class PlanificacionService {
     }
 
     return { sincronizados: users.length, creados, reactivados };
+  }
+
+  // Crea usuarios reales en el sistema para técnicos de planificación sin cuenta
+  async crearUsuarios() {
+    const sinCuenta = await this.tecnicos.find({
+      where: { activo: true, user_id: IsNull() },
+    });
+
+    const PASSWORD = 'Homeserve2026!';
+    const creados: { nombre: string; email: string; password: string }[] = [];
+    const omitidos: string[] = [];
+
+    for (const t of sinCuenta) {
+      const email = this.tecnicoEmail(t.nombre);
+      const nombre = this.tecnicoNombre(t.nombre);
+
+      const existe = await this.usuarios.findOne({ where: { email } });
+      if (existe) {
+        // Ya existe — solo enlazar
+        t.user_id = existe.id;
+        await this.tecnicos.save(t);
+        omitidos.push(t.nombre);
+        continue;
+      }
+
+      const hash = await bcrypt.hash(PASSWORD, 12);
+      const user = await this.usuarios.save(
+        this.usuarios.create({ nombre, email, password: hash, rol: Rol.TECNICO, activo: true, telefono: t.telefono ?? undefined }),
+      );
+      t.user_id = user.id;
+      await this.tecnicos.save(t);
+      creados.push({ nombre, email, password: PASSWORD });
+    }
+
+    return { creados: creados.length, omitidos: omitidos.length, usuarios: creados };
+  }
+
+  private tecnicoEmail(nombre: string): string {
+    const partes = nombre
+      .toLowerCase()
+      .replace(/\(.*?\)/g, '')
+      .replace(/\b(rp|aer|aerotermia)\b/g, '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+    return partes.join('.') + '@homeservesolar.es';
+  }
+
+  private tecnicoNombre(nombre: string): string {
+    return nombre
+      .replace(/\(.*?\)/g, '')
+      .replace(/\b(RP|AER|Aerotermia)\b/gi, '')
+      .replace(/,\s*/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
   }
 
   // ── Clientes ────────────────────────────────────────────────────────────────

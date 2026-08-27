@@ -46,6 +46,10 @@ export class PlanificacionController {
   @ApiOperation({ summary: 'Importa usuarios con rol técnico al módulo de planificación' })
   sincronizarTecnicos() { return this.svc.sincronizarUsuarios(); }
 
+  @Post('tecnicos/crear-usuarios')
+  @ApiOperation({ summary: 'Crea cuentas de usuario para técnicos de planificación sin cuenta' })
+  crearUsuarios() { return this.svc.crearUsuarios(); }
+
   // ── Clientes ────────────────────────────────────────────────────────────────
   @Get('clientes')
   getClientes() { return this.svc.getClientes(); }

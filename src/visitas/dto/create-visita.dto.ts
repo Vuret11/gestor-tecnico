@@ -30,4 +30,9 @@ export class CreateVisitaDto {
   @IsOptional()
   @IsString()
   notas?: string;
+
+  @ApiPropertyOptional({ enum: ['nueva', 'reforma'] })
+  @IsOptional()
+  @IsString()
+  modalidad?: string;
 }

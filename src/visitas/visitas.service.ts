@@ -10,9 +10,9 @@ import { buildCsv, formatDate } from '../common/utils/csv.util';
 
 const TIPO_LABELS: Record<string, string> = {
   visita_tecnica_fv: 'Visita Técnica FV',
-  visita_tecnica_aerotermia: 'Visita Técnica Aerotermia',
+  visita_tecnica_aerotermia: 'V.T. Rite',
   instalacion_nueva_fv: 'Instalación Nueva FV',
-  instalacion_nueva_aerotermia: 'Instalación Nueva Aerotermia',
+  instalacion_nueva_aerotermia: 'Inst. Nueva Rite',
 };
 
 const RELATIONS = { instalacion: true, tecnico: true } as const;

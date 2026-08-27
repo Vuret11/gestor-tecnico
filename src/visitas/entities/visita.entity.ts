@@ -44,6 +44,9 @@ export class Visita {
   @Column({ type: 'text', nullable: true })
   notas: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  modalidad: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
