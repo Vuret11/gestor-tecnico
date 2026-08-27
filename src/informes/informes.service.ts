@@ -12,9 +12,9 @@ import { CreateInformeDto } from './dto/create-informe.dto';
 
 const TIPO_LABELS: Record<string, string> = {
   visita_tecnica_fv: 'Visita Técnica FV',
-  visita_tecnica_aerotermia: 'Visita Técnica Aerotermia',
+  visita_tecnica_aerotermia: 'Visita Técnica Rite',
   instalacion_nueva_fv: 'Instalación Nueva FV',
-  instalacion_nueva_aerotermia: 'Instalación Nueva Aerotermia',
+  instalacion_nueva_aerotermia: 'Instalación Nueva Rite',
 };
 
 @Injectable()
