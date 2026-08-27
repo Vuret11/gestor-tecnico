@@ -222,6 +222,11 @@ export class PlanificacionService {
   }
 
   createObra(data: Partial<PlanObra>) {
+    if (!data.numeroObra) {
+      data.numeroObra = (data.instalacion_id ?? data.nombre ?? Date.now().toString())
+        .slice(0, 8).toUpperCase();
+    }
+    if (!data.nombre) data.nombre = data.numeroObra;
     return this.obras.save(this.obras.create(data));
   }
 
