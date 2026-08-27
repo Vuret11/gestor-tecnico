@@ -50,7 +50,7 @@ export class InstalacionesController {
   }
 
   @ApiOperation({ summary: 'Desactivar instalación' })
-  @Roles(Rol.ADMIN)
+  @Roles(Rol.ADMIN, Rol.OFICINA)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
