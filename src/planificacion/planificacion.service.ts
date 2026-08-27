@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PlanProvincia } from './entities/plan-provincia.entity';
 import { PlanTecnico } from './entities/plan-tecnico.entity';
 import { PlanCliente } from './entities/plan-cliente.entity';
 import { PlanObra } from './entities/plan-obra.entity';
 import { PlanAsignacion } from './entities/plan-asignacion.entity';
+import { User } from '../users/entities/user.entity';
+import { Instalacion } from '../instalaciones/entities/instalacion.entity';
+import { Rol } from '../common/enums/rol.enum';
 
 @Injectable()
 export class PlanificacionService {
@@ -15,6 +18,8 @@ export class PlanificacionService {
     @InjectRepository(PlanCliente) private clientes: Repository<PlanCliente>,
     @InjectRepository(PlanObra) private obras: Repository<PlanObra>,
     @InjectRepository(PlanAsignacion) private asignaciones: Repository<PlanAsignacion>,
+    @InjectRepository(User) private usuarios: Repository<User>,
+    @InjectRepository(Instalacion) private instalaciones: Repository<Instalacion>,
   ) {}
 
   // ── Provincias ──────────────────────────────────────────────────────────────
@@ -54,6 +59,38 @@ export class PlanificacionService {
     return this.tecnicos.save(t);
   }
 
+  // Sincroniza usuarios con rol=TECNICO → crea o reactiva sus entradas en plan_tecnicos
+  async sincronizarUsuarios() {
+    const users = await this.usuarios.find({ where: { rol: Rol.TECNICO, activo: true } });
+    let creados = 0;
+    let reactivados = 0;
+
+    for (const u of users) {
+      const existente = await this.tecnicos.findOne({ where: { user_id: u.id } });
+      if (!existente) {
+        await this.tecnicos.save(this.tecnicos.create({
+          user_id: u.id,
+          nombre: u.nombre,
+          telefono: u.telefono ?? undefined,
+          email: u.email,
+          tipo: 'propio',
+          activo: true,
+          viaja: false,
+        }));
+        creados++;
+      } else if (!existente.activo) {
+        existente.activo = true;
+        existente.nombre = u.nombre;
+        existente.email = u.email;
+        if (u.telefono) existente.telefono = u.telefono;
+        await this.tecnicos.save(existente);
+        reactivados++;
+      }
+    }
+
+    return { sincronizados: users.length, creados, reactivados };
+  }
+
   // ── Clientes ────────────────────────────────────────────────────────────────
   getClientes() { return this.clientes.find({ where: { activo: true }, order: { nombre: 'ASC' } }); }
 
@@ -72,6 +109,47 @@ export class PlanificacionService {
     if (!c) throw new NotFoundException();
     c.activo = false;
     return this.clientes.save(c);
+  }
+
+  // Sincroniza instalaciones del sistema → crea/reactiva entradas en plan_obras
+  async sincronizarInstalaciones() {
+    const insts = await this.instalaciones.find({ where: { activo: true } });
+    let creadas = 0;
+    let reactivadas = 0;
+
+    for (const inst of insts) {
+      const existente = await this.obras.findOne({ where: { instalacion_id: inst.id } });
+      if (!existente) {
+        await this.obras.save(this.obras.create({
+          instalacion_id: inst.id,
+          numeroObra: inst.id.slice(0, 8).toUpperCase(),
+          nombre: inst.nombre,
+          ciudad: inst.ciudad ?? undefined,
+          direccion: inst.direccion ?? undefined,
+          tipoTrabajo: 'otro',
+          estado: 'pendiente',
+          activo: true,
+        }));
+        creadas++;
+      } else if (!existente.activo) {
+        existente.activo = true;
+        existente.nombre = inst.nombre;
+        existente.ciudad = inst.ciudad ?? existente.ciudad;
+        await this.obras.save(existente);
+        reactivadas++;
+      }
+    }
+
+    return { sincronizadas: insts.length, creadas, reactivadas };
+  }
+
+  // Lista instalaciones del sistema principal (para seleccionar al crear obras)
+  getInstalacionesSistema() {
+    return this.instalaciones.find({
+      where: { activo: true },
+      order: { nombre: 'ASC' },
+      select: { id: true, nombre: true, ciudad: true, provincia: true, direccion: true },
+    });
   }
 
   // ── Obras ────────────────────────────────────────────────────────────────────

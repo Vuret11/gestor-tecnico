@@ -7,9 +7,11 @@ import { PlanTecnico } from './entities/plan-tecnico.entity';
 import { PlanCliente } from './entities/plan-cliente.entity';
 import { PlanObra } from './entities/plan-obra.entity';
 import { PlanAsignacion } from './entities/plan-asignacion.entity';
+import { User } from '../users/entities/user.entity';
+import { Instalacion } from '../instalaciones/entities/instalacion.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlanProvincia, PlanTecnico, PlanCliente, PlanObra, PlanAsignacion])],
+  imports: [TypeOrmModule.forFeature([PlanProvincia, PlanTecnico, PlanCliente, PlanObra, PlanAsignacion, User, Instalacion])],
   controllers: [PlanificacionController],
   providers: [PlanificacionService],
   exports: [PlanificacionService],

@@ -4,6 +4,7 @@ import {
 } from 'typeorm';
 import { PlanCliente } from './plan-cliente.entity';
 import { PlanProvincia } from './plan-provincia.entity';
+import { Instalacion } from '../../instalaciones/entities/instalacion.entity';
 
 export type EstadoObra =
   | 'pendiente' | 'planificada' | 'confirmada'
@@ -35,6 +36,14 @@ export class PlanObra {
 
   @Column({ nullable: true })
   provincia_id: string;
+
+  // Instalación del sistema principal (opcional)
+  @ManyToOne(() => Instalacion, { eager: true, nullable: true })
+  @JoinColumn({ name: 'instalacion_id' })
+  instalacion: Instalacion;
+
+  @Column({ nullable: true })
+  instalacion_id: string;
 
   @Column({ nullable: true })
   direccion: string;

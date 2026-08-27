@@ -11,6 +11,10 @@ export class PlanTecnico {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // FK al usuario del sistema (nullable: permite técnicos externos sin cuenta)
+  @Column({ nullable: true, unique: true })
+  user_id: string;
+
   @Column()
   nombre: string;
 

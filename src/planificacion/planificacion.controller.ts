@@ -42,6 +42,10 @@ export class PlanificacionController {
   @Delete('tecnicos/:id')
   removeTecnico(@Param('id') id: string) { return this.svc.removeTecnico(id); }
 
+  @Post('tecnicos/sincronizar')
+  @ApiOperation({ summary: 'Importa usuarios con rol técnico al módulo de planificación' })
+  sincronizarTecnicos() { return this.svc.sincronizarUsuarios(); }
+
   // ── Clientes ────────────────────────────────────────────────────────────────
   @Get('clientes')
   getClientes() { return this.svc.getClientes(); }
@@ -56,6 +60,14 @@ export class PlanificacionController {
 
   @Delete('clientes/:id')
   removeCliente(@Param('id') id: string) { return this.svc.removeCliente(id); }
+
+  @Get('instalaciones')
+  @ApiOperation({ summary: 'Instalaciones del sistema (para vincular obras)' })
+  getInstalaciones() { return this.svc.getInstalacionesSistema(); }
+
+  @Post('obras/sincronizar')
+  @ApiOperation({ summary: 'Importa instalaciones del sistema al módulo de planificación' })
+  sincronizarObras() { return this.svc.sincronizarInstalaciones(); }
 
   // ── Obras ────────────────────────────────────────────────────────────────────
   @Get('obras')
