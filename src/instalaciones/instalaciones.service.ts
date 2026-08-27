@@ -39,7 +39,6 @@ export class InstalacionesService {
 
   async remove(id: string): Promise<void> {
     const inst = await this.findOne(id);
-    inst.activo = false;
-    await this.repo.save(inst);
+    await this.repo.remove(inst);
   }
 }
