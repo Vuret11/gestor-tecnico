@@ -66,6 +66,9 @@ export class InstalacionesService {
         await em.query('DELETE FROM plan_obras WHERE instalacion_id = $1', [id]);
       }
 
+      // Incidencias vinculadas
+      await em.query('DELETE FROM incidencias WHERE instalacion_id = $1', [id]);
+
       await em.query('DELETE FROM instalaciones WHERE id = $1', [id]);
     });
   }
