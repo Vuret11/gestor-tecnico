@@ -20,6 +20,11 @@ export class ChecklistsController {
   @Get('plantillas')
   findAll() { return this.service.findAllPlantillas(); }
 
+  @ApiOperation({ summary: 'Plantillas por tipo de instalación (incluye genéricas)' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
+  @Get('plantillas/by-tipo/:tipo')
+  findByTipo(@Param('tipo') tipo: string) { return this.service.findPlantillasByTipo(tipo); }
+
   @ApiOperation({ summary: 'Obtener plantilla por ID' })
   @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Get('plantillas/:id')
@@ -45,7 +50,7 @@ export class ChecklistsController {
   @Post('visita/:visitaId')
   createForVisita(
     @Param('visitaId') visitaId: string,
-    @Body() body: { plantillaId: string },
+    @Body() body: { plantillaId?: string },
   ) { return this.service.createForVisita(visitaId, body.plantillaId); }
 
   @ApiOperation({ summary: 'Guardar respuestas del checklist' })

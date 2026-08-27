@@ -22,6 +22,8 @@ export class CreateSeccionDto {
 export class CreatePlantillaDto {
   @ApiProperty() @IsNotEmpty() @IsString() nombre: string;
   @ApiPropertyOptional() @IsOptional() @IsString() descripcion?: string;
+  @ApiPropertyOptional({ enum: ['fv', 'rite', 'otro'] })
+  @IsOptional() @IsString() tipoInstalacion?: 'fv' | 'rite' | 'otro';
   @ApiProperty({ type: [CreateSeccionDto] })
   @IsArray() @ValidateNested({ each: true }) @Type(() => CreateSeccionDto)
   secciones: CreateSeccionDto[];

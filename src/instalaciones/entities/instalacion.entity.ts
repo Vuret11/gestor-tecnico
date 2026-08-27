@@ -50,6 +50,9 @@ export class Instalacion {
   @Column({ nullable: true })
   clienteId: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  tipoInstalacion: string | null;
+
   @Column({ default: true })
   activo: boolean;
 

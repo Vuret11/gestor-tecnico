@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, IsNull, Or, Repository } from 'typeorm';
 import { ChecklistPlantilla } from './entities/checklist-plantilla.entity';
 import { VisitaChecklist } from './entities/visita-checklist.entity';
 import { VisitaRespuesta } from './entities/visita-respuesta.entity';
@@ -19,11 +19,23 @@ export class ChecklistsService {
     @InjectRepository(ChecklistPlantilla) private plantillasRepo: Repository<ChecklistPlantilla>,
     @InjectRepository(VisitaChecklist) private vcRepo: Repository<VisitaChecklist>,
     @InjectRepository(VisitaRespuesta) private respRepo: Repository<VisitaRespuesta>,
+    private dataSource: DataSource,
   ) {}
 
   findAllPlantillas() {
     return this.plantillasRepo.find({
       where: { activo: true },
+      relations: PLANTILLA_RELATIONS,
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  findPlantillasByTipo(tipo: string) {
+    return this.plantillasRepo.find({
+      where: [
+        { activo: true, tipoInstalacion: tipo as any },
+        { activo: true, tipoInstalacion: IsNull() },
+      ],
       relations: PLANTILLA_RELATIONS,
       order: { createdAt: 'ASC' },
     });
@@ -55,6 +67,7 @@ export class ChecklistsService {
     const p = this.plantillasRepo.create({
       nombre: dto.nombre,
       descripcion: dto.descripcion ?? null,
+      tipoInstalacion: dto.tipoInstalacion ?? null,
     } as any);
     (p as any).secciones = secciones;
     return this.plantillasRepo.save(p);
@@ -66,10 +79,30 @@ export class ChecklistsService {
     return this.plantillasRepo.save(p);
   }
 
-  async createForVisita(visitaId: string, plantillaId: string): Promise<VisitaChecklist> {
+  async createForVisita(visitaId: string, plantillaId?: string): Promise<VisitaChecklist> {
     const existing = await this.vcRepo.findOne({ where: { visitaId } });
     if (existing) return existing;
-    const vc = this.vcRepo.create({ visitaId, plantillaId });
+
+    let resolvedPlantillaId = plantillaId;
+
+    if (!resolvedPlantillaId) {
+      // Auto-seleccionar plantilla según tipo de instalación de la visita
+      const rows: { tipo: string }[] = await this.dataSource.query(
+        `SELECT i.tipo_instalacion AS tipo
+         FROM visitas v
+         JOIN instalaciones i ON i.id = v.instalacion_id
+         WHERE v.id = $1`, [visitaId],
+      );
+      const tipo = rows[0]?.tipo;
+      if (tipo) {
+        const plantillas = await this.findPlantillasByTipo(tipo);
+        resolvedPlantillaId = plantillas.find(p => p.tipoInstalacion === tipo)?.id
+          ?? plantillas[0]?.id;
+      }
+    }
+
+    if (!resolvedPlantillaId) throw new NotFoundException('No hay plantilla para este tipo de instalación');
+    const vc = this.vcRepo.create({ visitaId, plantillaId: resolvedPlantillaId });
     return this.vcRepo.save(vc);
   }
 
