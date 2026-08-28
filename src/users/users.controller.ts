@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Body, Patch, Param, Delete,
-  UseGuards, ClassSerializerInterceptor, UseInterceptors,
+  UseGuards, ClassSerializerInterceptor, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -44,6 +44,13 @@ export class UsersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
+  }
+
+  @ApiOperation({ summary: 'Configurar módulos accesibles para un usuario' })
+  @Roles(Rol.ADMIN)
+  @Patch(':id/modulos')
+  setModulos(@Param('id') id: string, @Body('modulosAcceso') modulosAcceso: string[] | null) {
+    return this.usersService.setModulos(id, modulosAcceso);
   }
 
   @ApiOperation({ summary: 'Desactivar usuario' })

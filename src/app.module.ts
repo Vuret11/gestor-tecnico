@@ -21,6 +21,8 @@ import { RepoArchivo } from './repositorio/entities/repo-archivo.entity';
 import { InventarioModule } from './inventario/inventario.module';
 import { InventarioArticulo } from './inventario/entities/inventario-articulo.entity';
 import { VisitaArticulo } from './inventario/entities/visita-articulo.entity';
+import { IngenieriaModule } from './ingenieria/ingenieria.module';
+import { ProyectoIngenieria } from './ingenieria/entities/proyecto-ingenieria.entity';
 import { PlanProvincia } from './planificacion/entities/plan-provincia.entity';
 import { PlanTecnico } from './planificacion/entities/plan-tecnico.entity';
 import { PlanCliente } from './planificacion/entities/plan-cliente.entity';
@@ -55,7 +57,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
         username: config.get('DB_USER', 'postgres'),
         password: config.get('DB_PASS', 'postgres'),
         database: config.get('DB_NAME', 'gestor_tecnico'),
-        entities: [User, Cliente, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta, PlanProvincia, PlanTecnico, PlanCliente, PlanObra, PlanAsignacion, RepoCarpeta, RepoArchivo, InventarioArticulo, VisitaArticulo],
+        entities: [User, Cliente, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta, PlanProvincia, PlanTecnico, PlanCliente, PlanObra, PlanAsignacion, RepoCarpeta, RepoArchivo, InventarioArticulo, VisitaArticulo, ProyectoIngenieria],
         synchronize: config.get('DB_SYNC') === 'true' || config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
         ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
@@ -74,6 +76,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     PlanificacionModule,
     RepositorioModule,
     InventarioModule,
+    IngenieriaModule,
     NotificationsModule,
   ],
   providers: [

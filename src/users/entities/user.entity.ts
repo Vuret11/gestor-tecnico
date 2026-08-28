@@ -29,6 +29,12 @@ export class User {
   @Column({ nullable: true })
   telefono: string;
 
+  @Column({ nullable: true })
+  departamento: string;
+
+  @Column({ type: 'json', nullable: true, default: null })
+  modulosAcceso: string[] | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

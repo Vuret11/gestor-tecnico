@@ -48,4 +48,10 @@ export class UsersService {
     user.activo = false;
     await this.repo.save(user);
   }
+
+  async setModulos(id: string, modulosAcceso: string[] | null): Promise<User> {
+    const user = await this.findOne(id);
+    user.modulosAcceso = modulosAcceso;
+    return this.repo.save(user);
+  }
 }
