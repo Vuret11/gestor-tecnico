@@ -50,6 +50,9 @@ export class Visita {
   @Column({ type: 'boolean', default: false })
   viaja: boolean;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  importeExtras?: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

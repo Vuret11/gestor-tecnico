@@ -53,6 +53,9 @@ export class Instalacion {
   @Column({ type: 'varchar', nullable: true })
   tipoInstalacion: string | null;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  importe?: number;
+
   @Column({ default: true })
   activo: boolean;
 

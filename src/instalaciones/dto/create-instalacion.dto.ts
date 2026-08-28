@@ -46,4 +46,8 @@ export class CreateInstalacionDto {
   @ApiPropertyOptional({ enum: ['fv', 'rite', 'otro'] })
   @IsOptional() @IsString() @IsIn(['fv', 'rite', 'otro'])
   tipoInstalacion?: string;
+
+  @ApiPropertyOptional({ example: 12500.00 })
+  @IsOptional() @Type(() => Number) @IsNumber()
+  importe?: number;
 }
