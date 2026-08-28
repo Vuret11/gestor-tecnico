@@ -56,14 +56,19 @@ export class InstalacionesService {
         await em.query('DELETE FROM visitas WHERE instalacion_id = $1', [id]);
       }
 
-      // Plan-obras vinculadas
+      // Plan-obras vinculadas: soft-delete para conservar historial de planificación
       const obras: { id: string }[] = await em.query(
-        'SELECT id FROM plan_obras WHERE instalacion_id = $1', [id],
+        'SELECT id FROM plan_obras WHERE instalacion_id = $1 AND activo = true', [id],
       );
       if (obras.length > 0) {
         const oIds = obras.map(o => o.id);
-        await em.query('DELETE FROM plan_asignaciones WHERE obra_id = ANY($1)', [oIds]);
-        await em.query('DELETE FROM plan_obras WHERE instalacion_id = $1', [id]);
+        // Eliminar asignaciones futuras pendientes de esas obras
+        await em.query(
+          'DELETE FROM plan_asignaciones WHERE obra_id = ANY($1) AND fecha >= CURRENT_DATE',
+          [oIds],
+        );
+        // Marcar obras como inactivas en lugar de borrarlas
+        await em.query('UPDATE plan_obras SET activo = false WHERE instalacion_id = $1', [id]);
       }
 
       // Incidencias vinculadas
