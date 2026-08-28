@@ -291,7 +291,11 @@ export class PlanificacionService {
     const tecnicoAnterior = await this.tecnicos.findOne({ where: { id: a.tecnico_id } });
     const fechaAnterior = a.fecha;
 
-    await this.asignaciones.save(Object.assign(a, data));
+    Object.assign(a, data);
+    // Clear eager relations so TypeORM uses FK columns directly
+    if (data.tecnico_id) (a as any).tecnico = { id: data.tecnico_id };
+    if (data.obra_id) (a as any).obra = { id: data.obra_id };
+    await this.asignaciones.save(a);
 
     // Sincronizar visita correspondiente si cambia técnico o fecha
     const tecnicoCambia = data.tecnico_id && data.tecnico_id !== a.tecnico_id;
