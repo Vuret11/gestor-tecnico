@@ -47,6 +47,9 @@ export class Visita {
   @Column({ type: 'varchar', nullable: true })
   modalidad: string;
 
+  @Column({ type: 'boolean', default: false })
+  viaja: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

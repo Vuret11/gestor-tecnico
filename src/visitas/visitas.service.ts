@@ -46,12 +46,14 @@ export class VisitasService {
     if (existente) {
       await this.planAsignacionRepo.save(Object.assign(existente, {
         obra_id: planObra?.id ?? existente.obra_id,
+        viaja: visita.viaja ?? existente.viaja,
       }));
     } else {
       await this.planAsignacionRepo.save(this.planAsignacionRepo.create({
         tecnico_id: planTecnico.id,
         obra_id: planObra?.id ?? undefined,
         fecha,
+        viaja: visita.viaja ?? false,
         observaciones: `Visita automática: ${TIPO_LABELS[visita.tipo] ?? visita.tipo}`,
       }));
     }

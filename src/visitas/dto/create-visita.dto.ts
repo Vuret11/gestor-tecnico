@@ -35,4 +35,8 @@ export class CreateVisitaDto {
   @IsOptional()
   @IsString()
   modalidad?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  viaja?: boolean;
 }
