@@ -7,6 +7,9 @@ import { UpdateVisitaDto } from './dto/update-visita.dto';
 import { EstadoVisita } from '../common/enums/estado-visita.enum';
 import { NotificationsGateway, VisitaNotificacion } from '../notifications/notifications.gateway';
 import { buildCsv, formatDate } from '../common/utils/csv.util';
+import { PlanTecnico } from '../planificacion/entities/plan-tecnico.entity';
+import { PlanObra } from '../planificacion/entities/plan-obra.entity';
+import { PlanAsignacion } from '../planificacion/entities/plan-asignacion.entity';
 
 const TIPO_LABELS: Record<string, string> = {
   visita_tecnica_fv: 'Visita Técnica FV',
@@ -21,8 +24,48 @@ const RELATIONS = { instalacion: true, tecnico: true } as const;
 export class VisitasService {
   constructor(
     @InjectRepository(Visita) private repo: Repository<Visita>,
+    @InjectRepository(PlanTecnico) private planTecnicoRepo: Repository<PlanTecnico>,
+    @InjectRepository(PlanObra) private planObraRepo: Repository<PlanObra>,
+    @InjectRepository(PlanAsignacion) private planAsignacionRepo: Repository<PlanAsignacion>,
     private readonly notifications: NotificationsGateway,
   ) {}
+
+  private async syncAsignacion(visita: Visita): Promise<void> {
+    const planTecnico = await this.planTecnicoRepo.findOne({ where: { user_id: visita.tecnico_id } });
+    if (!planTecnico) return;
+
+    const fecha = new Date(visita.fechaProgramada).toISOString().split('T')[0];
+    const planObra = visita.instalacion_id
+      ? await this.planObraRepo.findOne({ where: { instalacion_id: visita.instalacion_id, activo: true } })
+      : null;
+
+    const existente = await this.planAsignacionRepo.findOne({
+      where: { tecnico_id: planTecnico.id, fecha },
+    });
+
+    if (existente) {
+      await this.planAsignacionRepo.save(Object.assign(existente, {
+        obra_id: planObra?.id ?? existente.obra_id,
+      }));
+    } else {
+      await this.planAsignacionRepo.save(this.planAsignacionRepo.create({
+        tecnico_id: planTecnico.id,
+        obra_id: planObra?.id ?? undefined,
+        fecha,
+        observaciones: `Visita automática: ${TIPO_LABELS[visita.tipo] ?? visita.tipo}`,
+      }));
+    }
+  }
+
+  private async removeAsignacion(visita: Visita): Promise<void> {
+    const planTecnico = await this.planTecnicoRepo.findOne({ where: { user_id: visita.tecnico_id } });
+    if (!planTecnico) return;
+    const fecha = new Date(visita.fechaProgramada).toISOString().split('T')[0];
+    const existente = await this.planAsignacionRepo.findOne({
+      where: { tecnico_id: planTecnico.id, fecha },
+    });
+    if (existente) await this.planAsignacionRepo.remove(existente);
+  }
 
   async create(dto: CreateVisitaDto): Promise<Visita> {
     const fecha = new Date(dto.fechaProgramada);
@@ -40,6 +83,7 @@ export class VisitasService {
     const saved = await this.repo.save(this.repo.create(dto));
     const visita = await this.repo.findOne({ where: { id: saved.id }, relations: RELATIONS }) as Visita;
     this.notifications.notifyUser(dto.tecnico_id, 'nueva-visita', this.buildPayload(visita));
+    await this.syncAsignacion(visita);
     return visita;
   }
 
@@ -100,6 +144,7 @@ export class VisitasService {
     if (dto.instalacion_id) anterior.instalacion = { id: dto.instalacion_id } as any;
     await this.repo.save(anterior);
     const visita = await this.findOne(id);
+    await this.syncAsignacion(visita);
     const payload = this.buildPayload(visita);
 
     if (tecnicoCambia) {
@@ -173,5 +218,6 @@ export class VisitasService {
     visita.estado = EstadoVisita.CANCELADA;
     await this.repo.save(visita);
     this.notifications.notifyUser(visita.tecnico_id, 'visita-cancelada', this.buildPayload(visita));
+    await this.removeAsignacion(visita);
   }
 }
