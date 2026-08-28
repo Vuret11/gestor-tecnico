@@ -95,6 +95,9 @@ export class VisitasService {
     const tecnicoAnteriorId = anterior.tecnico_id;
 
     Object.assign(anterior, dto);
+    // Clear eager relations so TypeORM uses the FK columns directly
+    if (dto.tecnico_id) anterior.tecnico = { id: dto.tecnico_id } as any;
+    if (dto.instalacion_id) anterior.instalacion = { id: dto.instalacion_id } as any;
     await this.repo.save(anterior);
     const visita = await this.findOne(id);
     const payload = this.buildPayload(visita);
