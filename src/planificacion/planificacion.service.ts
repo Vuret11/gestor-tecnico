@@ -290,6 +290,7 @@ export class PlanificacionService {
 
     const tecnicoAnterior = await this.tecnicos.findOne({ where: { id: a.tecnico_id } });
     const fechaAnterior = a.fecha;
+    const tecnicoIdAnterior = a.tecnico_id;
 
     Object.assign(a, data);
     // Clear eager relations so TypeORM uses FK columns directly
@@ -298,15 +299,14 @@ export class PlanificacionService {
     await this.asignaciones.save(a);
 
     // Sincronizar visita correspondiente si cambia técnico o fecha
-    const tecnicoCambia = data.tecnico_id && data.tecnico_id !== a.tecnico_id;
-    const fechaCambia = data.fecha && data.fecha !== fechaAnterior;
+    const tecnicoCambia = !!data.tecnico_id && data.tecnico_id !== tecnicoIdAnterior;
+    const fechaCambia = !!data.fecha && data.fecha !== fechaAnterior;
 
     if ((tecnicoCambia || fechaCambia) && tecnicoAnterior?.user_id) {
-      const desdeDia = new Date(`${fechaAnterior}T00:00:00Z`);
-      const hastaDia = new Date(`${fechaAnterior}T23:59:59Z`);
-      const visita = await this.visitas.findOne({
-        where: { tecnico_id: tecnicoAnterior.user_id, fechaProgramada: Between(desdeDia, hastaDia) },
-      });
+      const visita = await this.visitas.createQueryBuilder('v')
+        .where('v.tecnico_id = :uid', { uid: tecnicoAnterior.user_id })
+        .andWhere("DATE(v.\"fechaProgramada\") = :fecha", { fecha: fechaAnterior })
+        .getOne();
 
       if (visita) {
         if (tecnicoCambia) {
