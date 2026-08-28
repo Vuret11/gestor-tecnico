@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Between, IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PlanProvincia } from './entities/plan-provincia.entity';
 import { PlanTecnico } from './entities/plan-tecnico.entity';
@@ -10,6 +10,7 @@ import { PlanAsignacion } from './entities/plan-asignacion.entity';
 import { User } from '../users/entities/user.entity';
 import { Instalacion } from '../instalaciones/entities/instalacion.entity';
 import { Rol } from '../common/enums/rol.enum';
+import { Visita } from '../visitas/entities/visita.entity';
 
 @Injectable()
 export class PlanificacionService {
@@ -21,6 +22,7 @@ export class PlanificacionService {
     @InjectRepository(PlanAsignacion) private asignaciones: Repository<PlanAsignacion>,
     @InjectRepository(User) private usuarios: Repository<User>,
     @InjectRepository(Instalacion) private instalaciones: Repository<Instalacion>,
+    @InjectRepository(Visita) private visitas: Repository<Visita>,
   ) {}
 
   // ── Provincias ──────────────────────────────────────────────────────────────
@@ -285,7 +287,37 @@ export class PlanificacionService {
   async updateAsignacion(id: string, data: Partial<PlanAsignacion>) {
     const a = await this.asignaciones.findOne({ where: { id } });
     if (!a) throw new NotFoundException();
-    return this.asignaciones.save(Object.assign(a, data));
+
+    const tecnicoAnterior = await this.tecnicos.findOne({ where: { id: a.tecnico_id } });
+    const fechaAnterior = a.fecha;
+
+    await this.asignaciones.save(Object.assign(a, data));
+
+    // Sincronizar visita correspondiente si cambia técnico o fecha
+    const tecnicoCambia = data.tecnico_id && data.tecnico_id !== a.tecnico_id;
+    const fechaCambia = data.fecha && data.fecha !== fechaAnterior;
+
+    if ((tecnicoCambia || fechaCambia) && tecnicoAnterior?.user_id) {
+      const desdeDia = new Date(`${fechaAnterior}T00:00:00Z`);
+      const hastaDia = new Date(`${fechaAnterior}T23:59:59Z`);
+      const visita = await this.visitas.findOne({
+        where: { tecnico_id: tecnicoAnterior.user_id, fechaProgramada: Between(desdeDia, hastaDia) },
+      });
+
+      if (visita) {
+        if (tecnicoCambia) {
+          const nuevoTecnico = await this.tecnicos.findOne({ where: { id: data.tecnico_id } });
+          if (nuevoTecnico?.user_id) visita.tecnico_id = nuevoTecnico.user_id;
+        }
+        if (fechaCambia) {
+          const [h, m, s] = visita.fechaProgramada.toISOString().split('T')[1].split(':');
+          visita.fechaProgramada = new Date(`${data.fecha}T${h}:${m}:${s}Z`);
+        }
+        await this.visitas.save(visita);
+      }
+    }
+
+    return this.asignaciones.findOne({ where: { id }, relations: { tecnico: true, obra: true } });
   }
 
   async removeAsignacion(id: string) {
