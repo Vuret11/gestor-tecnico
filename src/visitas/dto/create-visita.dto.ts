@@ -40,6 +40,10 @@ export class CreateVisitaDto {
   @IsOptional()
   viaja?: boolean;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  llevaAts?: boolean;
+
   @ApiPropertyOptional({ example: 250.00 })
   @IsOptional()
   importeExtras?: number;
