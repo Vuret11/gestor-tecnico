@@ -94,6 +94,46 @@ export class StatsService {
     };
   }
 
+  async getKpisTecnicos(desde?: Date, hasta?: Date) {
+    const tecnicos = await this.usersRepo.find({
+      where: { rol: Rol.TECNICO, activo: true },
+      order: { nombre: 'ASC' },
+    });
+
+    const whereTime = desde && hasta ? { fechaProgramada: Between(desde, hasta) } : {};
+
+    const [todasVisitas, todasIncidencias] = await Promise.all([
+      this.visitasRepo.find({ where: whereTime, relations: { instalacion: true, tecnico: true } }),
+      this.incidenciasRepo.find({ relations: { creadoPor: true } }),
+    ]);
+
+    return tecnicos.map(t => {
+      const visitas = todasVisitas.filter(v => v.tecnico_id === t.id);
+      const completadas = visitas.filter(v => v.estado === EstadoVisita.COMPLETADA);
+      const incidencias = todasIncidencias.filter(i => i.creadoPor?.id === t.id);
+
+      // Horas trabajadas: suma de (fechaFin - fechaInicio) de visitas completadas
+      let minutosTotales = 0;
+      for (const v of completadas) {
+        if (v.fechaInicio && v.fechaFin) {
+          minutosTotales += (new Date(v.fechaFin).getTime() - new Date(v.fechaInicio).getTime()) / 60000;
+        }
+      }
+      const horasTotales = Math.round(minutosTotales / 60 * 10) / 10;
+
+      // Instalaciones únicas visitadas
+      const instalacionesSet = new Set(visitas.map(v => v.instalacion_id));
+
+      return {
+        tecnico: { id: t.id, nombre: t.nombre, email: t.email },
+        visitas: { total: visitas.length, completadas: completadas.length },
+        horas: horasTotales,
+        incidencias: incidencias.length,
+        instalaciones: instalacionesSet.size,
+      };
+    });
+  }
+
   private groupToMap(rows: { [key: string]: string }[], key: string, allKeys: string[]): Record<string, number> {
     const base = Object.fromEntries(allKeys.map(k => [k, 0]));
     for (const row of rows) {

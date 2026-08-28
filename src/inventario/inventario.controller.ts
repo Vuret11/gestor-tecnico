@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Query,
+  Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Query, ParseBoolPipe, Optional,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InventarioService } from './inventario.service';
@@ -70,5 +70,17 @@ export class InventarioController {
   @Delete('visita/linea/:id')
   removeFromVisita(@Param('id') id: string) {
     return this.service.removeFromVisita(id);
+  }
+
+  @ApiOperation({ summary: 'Historial de materiales usados en visitas' })
+  @Get('historial')
+  historial(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.service.historial(
+      desde ? new Date(desde) : undefined,
+      hasta ? new Date(hasta) : undefined,
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StatsService } from './stats.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,5 +18,18 @@ export class StatsController {
   @Get('dashboard')
   dashboard() {
     return this.service.getDashboard();
+  }
+
+  @ApiOperation({ summary: 'KPIs por técnico (visitas, horas, incidencias, instalaciones)' })
+  @Roles(Rol.ADMIN, Rol.OFICINA)
+  @Get('kpis-tecnicos')
+  kpisTecnicos(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.service.getKpisTecnicos(
+      desde ? new Date(desde) : undefined,
+      hasta ? new Date(hasta) : undefined,
+    );
   }
 }

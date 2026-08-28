@@ -96,4 +96,17 @@ export class InventarioService {
     if (art.stockActual < 0) throw new BadRequestException('Stock no puede ser negativo');
     return this.artRepo.save(art);
   }
+
+  historial(desde?: Date, hasta?: Date): Promise<VisitaArticulo[]> {
+    const qb = this.vaRepo.createQueryBuilder('va')
+      .leftJoinAndSelect('va.articulo', 'art')
+      .leftJoinAndSelect('va.visita', 'v')
+      .leftJoinAndSelect('v.instalacion', 'inst')
+      .leftJoinAndSelect('v.tecnico', 'tec')
+      .orderBy('va.createdAt', 'DESC');
+    if (desde && hasta) {
+      qb.where('va.createdAt BETWEEN :desde AND :hasta', { desde, hasta });
+    }
+    return qb.getMany();
+  }
 }
