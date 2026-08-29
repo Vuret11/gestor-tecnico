@@ -7,7 +7,6 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { Rol } from '../common/enums/rol.enum';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,15 +30,5 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: { id: string }) {
     return this.usersService.findOne(user.id);
-  }
-
-  @ApiOperation({ summary: 'Seed inicial — solo actúa si no hay usuarios' })
-  @Post('seed')
-  async seed() {
-    const users = await this.usersService.findAll();
-    if (users.length > 0) return { message: 'Ya existen usuarios, seed omitido' };
-    await this.usersService.create({ nombre: 'Administrador', email: 'admin@empresa.com', password: 'Admin1234!', rol: Rol.ADMIN, telefono: '600000001' });
-    await this.usersService.create({ nombre: 'Oficina Central', email: 'oficina@empresa.com', password: 'Oficina1234!', rol: Rol.OFICINA, telefono: '600000002' });
-    return { message: 'Seed completado', admin: 'admin@empresa.com / Admin1234!' };
   }
 }
