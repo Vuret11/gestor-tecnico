@@ -4,6 +4,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InventarioService } from './inventario.service';
 import { CreateArticuloDto } from './dto/create-articulo.dto';
+import { CreateAlmacenDto } from './dto/create-almacen.dto';
 import { AddVisitaArticuloDto } from './dto/add-visita-articulo.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -13,6 +14,20 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('inventario')
 export class InventarioController {
   constructor(private readonly service: InventarioService) {}
+
+  // ── Almacenes ─────────────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Listar almacenes activos' })
+  @Get('almacenes')
+  findAlmacenes() {
+    return this.service.findAlmacenes();
+  }
+
+  @ApiOperation({ summary: 'Crear almacén' })
+  @Post('almacenes')
+  createAlmacen(@Body() dto: CreateAlmacenDto) {
+    return this.service.createAlmacen(dto);
+  }
 
   // ── Artículos ─────────────────────────────────────────────────────────────
 
@@ -40,10 +55,20 @@ export class InventarioController {
     return this.service.update(id, dto);
   }
 
-  @ApiOperation({ summary: 'Ajustar stock manualmente' })
-  @Patch('articulos/:id/stock')
-  ajustarStock(@Param('id') id: string, @Body('cantidad') cantidad: number) {
-    return this.service.ajustarStock(id, Number(cantidad));
+  @ApiOperation({ summary: 'Ajustar stock manualmente en un almacén' })
+  @Patch('articulos/:id/almacenes/:almacenId')
+  ajustarStock(
+    @Param('id') id: string,
+    @Param('almacenId') almacenId: string,
+    @Body('delta') delta?: number,
+    @Body('stockMinimo') stockMinimo?: number,
+  ) {
+    return this.service.ajustarStock(
+      id,
+      almacenId,
+      delta != null ? Number(delta) : undefined,
+      stockMinimo != null ? Number(stockMinimo) : undefined,
+    );
   }
 
   @ApiOperation({ summary: 'Desactivar artículo' })

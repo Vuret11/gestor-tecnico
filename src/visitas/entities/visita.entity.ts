@@ -6,6 +6,7 @@ import { EstadoVisita } from '../../common/enums/estado-visita.enum';
 import { TipoVisita } from '../../common/enums/tipo-visita.enum';
 import { User } from '../../users/entities/user.entity';
 import { Instalacion } from '../../instalaciones/entities/instalacion.entity';
+import { Almacen } from '../../inventario/entities/almacen.entity';
 
 @Entity('visitas')
 export class Visita {
@@ -52,6 +53,13 @@ export class Visita {
 
   @Column({ type: 'boolean', default: false })
   llevaAts: boolean;
+
+  @Column({ nullable: true })
+  almacen_id?: string;
+
+  @ManyToOne(() => Almacen, { eager: true, nullable: true })
+  @JoinColumn({ name: 'almacen_id' })
+  almacen?: Almacen;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   importeExtras?: number;

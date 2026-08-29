@@ -44,6 +44,11 @@ export class CreateVisitaDto {
   @IsOptional()
   llevaAts?: boolean;
 
+  @ApiPropertyOptional({ description: 'Almacén de origen del material usado en esta visita' })
+  @IsOptional()
+  @IsUUID()
+  almacen_id?: string;
+
   @ApiPropertyOptional({ example: 250.00 })
   @IsOptional()
   importeExtras?: number;

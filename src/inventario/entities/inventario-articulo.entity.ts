@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { InventarioStock } from './inventario-stock.entity';
 
 @Entity('inventario_articulos')
 export class InventarioArticulo {
@@ -17,11 +18,8 @@ export class InventarioArticulo {
   @Column({ default: 'ud' })
   unidad: string;
 
-  @Column({ type: 'decimal', precision: 12, scale: 3, default: 0 })
-  stockActual: number;
-
-  @Column({ type: 'decimal', precision: 12, scale: 3, default: 0 })
-  stockMinimo: number;
+  @OneToMany(() => InventarioStock, s => s.articulo)
+  stocks: InventarioStock[];
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   precioUnitario?: number;

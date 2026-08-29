@@ -15,12 +15,6 @@ export class CreateArticuloDto {
   unidad?: string;
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0)
-  stockActual?: number;
-
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0)
-  stockMinimo?: number;
-
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0)
   precioUnitario?: number;
 
   @IsOptional() @IsString()
