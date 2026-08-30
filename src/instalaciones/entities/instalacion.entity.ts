@@ -43,6 +43,12 @@ export class Instalacion {
   @Column({ type: 'text', nullable: true })
   notas: string;
 
+  @Column({ type: 'text', nullable: true })
+  memoriaTecnicaUrl?: string;
+
+  @Column({ nullable: true })
+  memoriaTecnicaNombre?: string;
+
   @ManyToOne(() => Cliente, { eager: true, nullable: true })
   @JoinColumn({ name: 'clienteId' })
   clienteData: Cliente;

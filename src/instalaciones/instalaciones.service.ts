@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { v2 as cloudinary } from 'cloudinary';
 import { Instalacion } from './entities/instalacion.entity';
 import { CreateInstalacionDto } from './dto/create-instalacion.dto';
 import { UpdateInstalacionDto } from './dto/update-instalacion.dto';
@@ -10,7 +11,15 @@ export class InstalacionesService {
   constructor(
     @InjectRepository(Instalacion) private repo: Repository<Instalacion>,
     private dataSource: DataSource,
-  ) {}
+  ) {
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+      });
+    }
+  }
 
   async create(dto: CreateInstalacionDto): Promise<Instalacion> {
     const saved = await this.repo.save(this.repo.create(dto));
@@ -36,6 +45,32 @@ export class InstalacionesService {
 
   findByCliente(clienteId: string): Promise<Instalacion[]> {
     return this.repo.find({ where: { clienteId, activo: true }, order: { nombre: 'ASC' } });
+  }
+
+  async uploadMemoriaTecnica(id: string, file: Express.Multer.File): Promise<Instalacion> {
+    const inst = await this.findOne(id);
+
+    let url: string;
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'gestor-tecnico/instalaciones', resource_type: 'auto' },
+          (error, res) => {
+            if (error || !res) reject(error ?? new Error('Upload failed'));
+            else resolve(res);
+          },
+        );
+        stream.end(file.buffer);
+      });
+      url = result.secure_url;
+    } else {
+      url = `/uploads/${Date.now()}-${file.originalname}`;
+    }
+
+    inst.memoriaTecnicaUrl = url;
+    inst.memoriaTecnicaNombre = file.originalname;
+    await this.repo.save(inst);
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {

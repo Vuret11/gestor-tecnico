@@ -1,7 +1,10 @@
 import {
   Controller, Get, Post, Body, Patch, Param, Delete, UseGuards,
+  UseInterceptors, UploadedFile,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { InstalacionesService } from './instalaciones.service';
 import { CreateInstalacionDto } from './dto/create-instalacion.dto';
 import { UpdateInstalacionDto } from './dto/update-instalacion.dto';
@@ -47,6 +50,15 @@ export class InstalacionesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateInstalacionDto) {
     return this.service.update(id, dto);
+  }
+
+  @ApiOperation({ summary: 'Adjuntar memoria técnica' })
+  @ApiConsumes('multipart/form-data')
+  @Roles(Rol.ADMIN, Rol.OFICINA)
+  @Post(':id/memoria-tecnica')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  uploadMemoriaTecnica(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    return this.service.uploadMemoriaTecnica(id, file);
   }
 
   @ApiOperation({ summary: 'Desactivar instalación' })

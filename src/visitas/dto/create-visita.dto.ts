@@ -8,9 +8,10 @@ export class CreateVisitaDto {
   @IsUUID()
   instalacion_id: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsUUID()
-  tecnico_id: string;
+  tecnico_id?: string;
 
   @ApiProperty({ example: '2026-06-20T09:00:00.000Z' })
   @IsDateString()

@@ -31,6 +31,7 @@ export class VisitasService {
   ) {}
 
   private async syncAsignacion(visita: Visita): Promise<void> {
+    if (!visita.tecnico_id) return;
     const planTecnico = await this.planTecnicoRepo.findOne({ where: { user_id: visita.tecnico_id } });
     if (!planTecnico) return;
 
@@ -60,6 +61,7 @@ export class VisitasService {
   }
 
   private async removeAsignacion(visita: Visita): Promise<void> {
+    if (!visita.tecnico_id) return;
     const planTecnico = await this.planTecnicoRepo.findOne({ where: { user_id: visita.tecnico_id } });
     if (!planTecnico) return;
     const fecha = new Date(visita.fechaProgramada).toISOString().split('T')[0];
@@ -70,21 +72,25 @@ export class VisitasService {
   }
 
   async create(dto: CreateVisitaDto): Promise<Visita> {
-    const fecha = new Date(dto.fechaProgramada);
-    const desde = new Date(fecha.getTime() - 2 * 60 * 60 * 1000);
-    const hasta = new Date(fecha.getTime() + 2 * 60 * 60 * 1000);
-    const conflicto = await this.repo
-      .createQueryBuilder('v')
-      .where('v.tecnico_id = :tid', { tid: dto.tecnico_id })
-      .andWhere('v.fechaProgramada BETWEEN :desde AND :hasta', { desde, hasta })
-      .andWhere("v.estado != 'cancelada'")
-      .getOne();
-    if (conflicto) {
-      throw new ConflictException('El técnico ya tiene una visita asignada en esa franja horaria');
+    if (dto.tecnico_id) {
+      const fecha = new Date(dto.fechaProgramada);
+      const desde = new Date(fecha.getTime() - 2 * 60 * 60 * 1000);
+      const hasta = new Date(fecha.getTime() + 2 * 60 * 60 * 1000);
+      const conflicto = await this.repo
+        .createQueryBuilder('v')
+        .where('v.tecnico_id = :tid', { tid: dto.tecnico_id })
+        .andWhere('v.fechaProgramada BETWEEN :desde AND :hasta', { desde, hasta })
+        .andWhere("v.estado != 'cancelada'")
+        .getOne();
+      if (conflicto) {
+        throw new ConflictException('El técnico ya tiene una visita asignada en esa franja horaria');
+      }
     }
     const saved = await this.repo.save(this.repo.create(dto));
     const visita = await this.repo.findOne({ where: { id: saved.id }, relations: RELATIONS }) as Visita;
-    this.notifications.notifyUser(dto.tecnico_id, 'nueva-visita', this.buildPayload(visita));
+    if (dto.tecnico_id) {
+      this.notifications.notifyUser(dto.tecnico_id, 'nueva-visita', this.buildPayload(visita));
+    }
     await this.syncAsignacion(visita);
     return visita;
   }
@@ -135,7 +141,7 @@ export class VisitasService {
 
   async update(id: string, dto: UpdateVisitaDto): Promise<Visita> {
     const anterior = await this.findOne(id);
-    const tecnicoCambia = !!dto.tecnico_id && dto.tecnico_id !== anterior.tecnico_id;
+    const tecnicoCambia = dto.tecnico_id !== undefined && dto.tecnico_id !== anterior.tecnico_id;
     const fechaCambia = !!dto.fechaProgramada &&
       new Date(dto.fechaProgramada).getTime() !== new Date(anterior.fechaProgramada).getTime();
     const tecnicoAnteriorId = anterior.tecnico_id;
@@ -143,6 +149,7 @@ export class VisitasService {
     Object.assign(anterior, dto);
     // Clear eager relations so TypeORM uses the FK columns directly
     if (dto.tecnico_id) anterior.tecnico = { id: dto.tecnico_id } as any;
+    else if (dto.tecnico_id === null) anterior.tecnico = undefined;
     if (dto.instalacion_id) anterior.instalacion = { id: dto.instalacion_id } as any;
     await this.repo.save(anterior);
     const visita = await this.findOne(id);
@@ -150,9 +157,9 @@ export class VisitasService {
     const payload = this.buildPayload(visita);
 
     if (tecnicoCambia) {
-      this.notifications.notifyUser(tecnicoAnteriorId, 'visita-cancelada', payload);
-      this.notifications.notifyUser(visita.tecnico_id, 'nueva-visita', payload);
-    } else if (fechaCambia) {
+      if (tecnicoAnteriorId) this.notifications.notifyUser(tecnicoAnteriorId, 'visita-cancelada', payload);
+      if (visita.tecnico_id) this.notifications.notifyUser(visita.tecnico_id, 'nueva-visita', payload);
+    } else if (fechaCambia && visita.tecnico_id) {
       this.notifications.notifyUser(visita.tecnico_id, 'visita-actualizada', payload);
     }
 
@@ -219,7 +226,9 @@ export class VisitasService {
     const visita = await this.findOne(id);
     visita.estado = EstadoVisita.CANCELADA;
     await this.repo.save(visita);
-    this.notifications.notifyUser(visita.tecnico_id, 'visita-cancelada', this.buildPayload(visita));
+    if (visita.tecnico_id) {
+      this.notifications.notifyUser(visita.tecnico_id, 'visita-cancelada', this.buildPayload(visita));
+    }
     await this.removeAsignacion(visita);
   }
 }

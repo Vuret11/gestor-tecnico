@@ -20,12 +20,12 @@ export class Visita {
   @Column()
   instalacion_id: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, { eager: true, nullable: true })
   @JoinColumn({ name: 'tecnico_id' })
-  tecnico: User;
+  tecnico?: User;
 
-  @Column()
-  tecnico_id: string;
+  @Column({ nullable: true })
+  tecnico_id?: string;
 
   @Column({ type: 'timestamp' })
   fechaProgramada: Date;
