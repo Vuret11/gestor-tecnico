@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateFotoDto {
   @ApiProperty()
@@ -33,4 +33,10 @@ export class CreateFotoDto {
 
   @ApiPropertyOptional() @IsOptional() @IsUUID()
   informe_id?: string;
+
+  @ApiPropertyOptional({ description: 'Si es false, el técnico no verá este archivo en la app (solo oficina)', default: true })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  visibleTecnico?: boolean;
 }

@@ -37,8 +37,11 @@ export class FotosService {
     return this.repo.save(this.repo.create(dto));
   }
 
-  findByVisita(visita_id: string): Promise<Foto[]> {
-    return this.repo.find({ where: { visita_id }, order: { createdAt: 'ASC' } });
+  findByVisita(visita_id: string, soloVisiblesTecnico = false): Promise<Foto[]> {
+    return this.repo.find({
+      where: soloVisiblesTecnico ? { visita_id, visibleTecnico: true } : { visita_id },
+      order: { createdAt: 'ASC' },
+    });
   }
 
   async findOne(id: string): Promise<Foto> {

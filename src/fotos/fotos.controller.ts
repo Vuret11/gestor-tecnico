@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Body, Param, Delete, UseGuards,
-  UseInterceptors, UploadedFile,
+  UseInterceptors, UploadedFile, Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
@@ -80,8 +80,8 @@ export class FotosController {
 
   @ApiOperation({ summary: 'Fotos de una visita' })
   @Get('visita/:visitaId')
-  findByVisita(@Param('visitaId') visitaId: string) {
-    return this.service.findByVisita(visitaId);
+  findByVisita(@Param('visitaId') visitaId: string, @Req() req: any) {
+    return this.service.findByVisita(visitaId, req.user?.rol === 'tecnico');
   }
 
   @ApiOperation({ summary: 'Obtener foto por ID' })

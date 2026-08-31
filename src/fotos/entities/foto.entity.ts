@@ -40,6 +40,9 @@ export class Foto {
   @Column({ nullable: true })
   informe_id: string;
 
+  @Column({ default: true })
+  visibleTecnico: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }
