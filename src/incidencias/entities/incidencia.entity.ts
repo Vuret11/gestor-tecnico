@@ -47,6 +47,9 @@ export class Incidencia {
   @Column({ nullable: true })
   asignado_a_id: string;
 
+  @Column({ type: 'date', nullable: true })
+  fecha: string | null;
+
   @Column({ type: 'text', nullable: true })
   resolucion: string;
 

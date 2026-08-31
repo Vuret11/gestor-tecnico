@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prioridad } from '../../common/enums/prioridad.enum';
 
@@ -26,4 +26,8 @@ export class CreateIncidenciaDto {
   @ApiPropertyOptional()
   @IsOptional() @IsUUID()
   asignado_a_id?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha programada en el calendario de Planificación (YYYY-MM-DD)' })
+  @IsOptional() @IsDateString()
+  fecha?: string;
 }

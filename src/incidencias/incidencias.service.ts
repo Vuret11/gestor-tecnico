@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Incidencia } from './entities/incidencia.entity';
 import { CreateIncidenciaDto } from './dto/create-incidencia.dto';
 import { UpdateIncidenciaDto } from './dto/update-incidencia.dto';
@@ -35,6 +35,10 @@ export class IncidenciasService {
       ],
       order: { prioridad: 'DESC', createdAt: 'ASC' },
     });
+  }
+
+  findSemana(desde: string, hasta: string): Promise<Incidencia[]> {
+    return this.repo.find({ where: { fecha: Between(desde, hasta) }, order: { fecha: 'ASC' } });
   }
 
   async findOne(id: string): Promise<Incidencia> {

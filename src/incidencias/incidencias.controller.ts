@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Body, Patch, Param, UseGuards,
+  Controller, Get, Post, Body, Patch, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { IncidenciasService } from './incidencias.service';
@@ -31,6 +31,12 @@ export class IncidenciasController {
   @Get('abiertas')
   findAbiertas() {
     return this.service.findAbiertas();
+  }
+
+  @ApiOperation({ summary: 'Incidencias con fecha programada en una semana' })
+  @Get('semana')
+  findSemana(@Query('desde') desde: string, @Query('hasta') hasta: string) {
+    return this.service.findSemana(desde, hasta);
   }
 
   @ApiOperation({ summary: 'Obtener incidencia por ID' })
