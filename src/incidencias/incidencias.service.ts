@@ -49,6 +49,10 @@ export class IncidenciasService {
     const tecnicoAnteriorId = anterior.asignado_a_id;
 
     Object.assign(anterior, dto);
+    // Limpiar la relación eager para que TypeORM use la columna FK recién asignada
+    if (dto.asignado_a_id) anterior.asignadoA = { id: dto.asignado_a_id } as any;
+    else if (dto.asignado_a_id === null) anterior.asignadoA = undefined as any;
+    if (dto.instalacion_id) anterior.instalacion = { id: dto.instalacion_id } as any;
     await this.repo.save(anterior);
     const inc = await this.findOne(id);
 
