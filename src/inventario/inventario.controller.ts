@@ -85,6 +85,12 @@ export class InventarioController {
     return this.service.findByVisita(visitaId);
   }
 
+  @ApiOperation({ summary: 'Artículos usados en todas las visitas de una instalación' })
+  @Get('instalacion/:instalacionId')
+  findByInstalacion(@Param('instalacionId') instalacionId: string) {
+    return this.service.findByInstalacion(instalacionId);
+  }
+
   @ApiOperation({ summary: 'Añadir artículo a visita (descuenta stock)' })
   @Post('visita/:visitaId')
   addToVisita(@Param('visitaId') visitaId: string, @Body() dto: AddVisitaArticuloDto) {

@@ -110,6 +110,16 @@ export class InventarioService {
     return this.vaRepo.find({ where: { visita_id }, order: { createdAt: 'ASC' } });
   }
 
+  findByInstalacion(instalacion_id: string): Promise<VisitaArticulo[]> {
+    return this.vaRepo.createQueryBuilder('va')
+      .innerJoin('va.visita', 'v')
+      .leftJoinAndSelect('va.articulo', 'articulo')
+      .leftJoinAndSelect('va.almacen', 'almacen')
+      .where('v.instalacion_id = :instalacion_id', { instalacion_id })
+      .orderBy('va.createdAt', 'ASC')
+      .getMany();
+  }
+
   async addToVisita(visita_id: string, dto: AddVisitaArticuloDto): Promise<VisitaArticulo> {
     const visita = await this.visitaRepo.findOne({ where: { id: visita_id } });
     if (!visita) throw new NotFoundException(`Visita ${visita_id} no encontrada`);
