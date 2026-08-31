@@ -151,6 +151,7 @@ export class VisitasService {
     if (dto.tecnico_id) anterior.tecnico = { id: dto.tecnico_id } as any;
     else if (dto.tecnico_id === null) anterior.tecnico = undefined;
     if (dto.instalacion_id) anterior.instalacion = { id: dto.instalacion_id } as any;
+    if (dto.almacen_id) anterior.almacen = { id: dto.almacen_id } as any;
     await this.repo.save(anterior);
     const visita = await this.findOne(id);
     await this.syncAsignacion(visita);
