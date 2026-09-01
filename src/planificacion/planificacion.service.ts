@@ -52,7 +52,11 @@ export class PlanificacionService {
   async updateTecnico(id: string, data: Partial<PlanTecnico>) {
     const t = await this.tecnicos.findOne({ where: { id } });
     if (!t) throw new NotFoundException();
-    return this.tecnicos.save(Object.assign(t, data));
+    Object.assign(t, data);
+    // Limpiar la relación eager para que TypeORM use la columna FK recién asignada
+    if (data.provincia_id) t.provincia = { id: data.provincia_id } as any;
+    else if (data.provincia_id === null) t.provincia = undefined as any;
+    return this.tecnicos.save(t);
   }
 
   async removeTecnico(id: string) {
@@ -235,7 +239,15 @@ export class PlanificacionService {
   async updateObra(id: string, data: Partial<PlanObra>) {
     const o = await this.obras.findOne({ where: { id } });
     if (!o) throw new NotFoundException();
-    return this.obras.save(Object.assign(o, data));
+    Object.assign(o, data);
+    // Limpiar las relaciones eager para que TypeORM use las columnas FK recién asignadas
+    if (data.cliente_id) o.cliente = { id: data.cliente_id } as any;
+    else if (data.cliente_id === null) o.cliente = undefined as any;
+    if (data.provincia_id) o.provincia = { id: data.provincia_id } as any;
+    else if (data.provincia_id === null) o.provincia = undefined as any;
+    if (data.instalacion_id) o.instalacion = { id: data.instalacion_id } as any;
+    else if (data.instalacion_id === null) o.instalacion = undefined as any;
+    return this.obras.save(o);
   }
 
   async removeObra(id: string) {
@@ -296,6 +308,8 @@ export class PlanificacionService {
     // Clear eager relations so TypeORM uses FK columns directly
     if (data.tecnico_id) (a as any).tecnico = { id: data.tecnico_id };
     if (data.obra_id) (a as any).obra = { id: data.obra_id };
+    if (data.provincia_trabajo_id) (a as any).provinciatrabajo = { id: data.provincia_trabajo_id };
+    else if (data.provincia_trabajo_id === null) (a as any).provinciatrabajo = undefined;
     await this.asignaciones.save(a);
 
     // Sincronizar visita correspondiente si cambia técnico o fecha

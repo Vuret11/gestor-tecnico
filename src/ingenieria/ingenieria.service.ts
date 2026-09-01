@@ -30,6 +30,9 @@ export class IngenieriaService {
   async update(id: string, dto: Partial<CreateProyectoDto>): Promise<ProyectoIngenieria> {
     const p = await this.findOne(id);
     Object.assign(p, dto);
+    // Limpiar la relación eager para que TypeORM use la columna FK recién asignada
+    if (dto.tecnico_id) p.tecnico = { id: dto.tecnico_id } as any;
+    else if (dto.tecnico_id === null) p.tecnico = undefined as any;
     return this.repo.save(p);
   }
 
