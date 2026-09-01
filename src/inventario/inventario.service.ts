@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InventarioArticulo } from './entities/inventario-articulo.entity';
 import { InventarioStock } from './entities/inventario-stock.entity';
 import { Almacen } from './entities/almacen.entity';
@@ -18,6 +18,7 @@ export class InventarioService {
     @InjectRepository(Almacen) private almacenRepo: Repository<Almacen>,
     @InjectRepository(VisitaArticulo) private vaRepo: Repository<VisitaArticulo>,
     @InjectRepository(Visita) private visitaRepo: Repository<Visita>,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   // ── Almacenes ─────────────────────────────────────────────────────────────
@@ -82,26 +83,39 @@ export class InventarioService {
 
   // ── Stock por almacén ─────────────────────────────────────────────────────
 
-  private async findOrCreateStock(articulo_id: string, almacen_id: string): Promise<InventarioStock> {
-    let stock = await this.stockRepo.findOne({ where: { articulo_id, almacen_id } });
-    if (!stock) {
-      stock = await this.stockRepo.save(this.stockRepo.create({ articulo_id, almacen_id, stockActual: 0, stockMinimo: 0 }));
-    }
-    return stock;
+  async ajustarStock(articulo_id: string, almacen_id: string, delta?: number, stockMinimo?: number): Promise<InventarioArticulo> {
+    await this.dataSource.transaction(async manager => {
+      const stock = await this.lockOrCreateStock(manager, articulo_id, almacen_id);
+      if (delta != null) {
+        const nuevo = Number(stock.stockActual) + Number(delta);
+        if (nuevo < 0) throw new BadRequestException('Stock no puede ser negativo');
+        stock.stockActual = nuevo;
+      }
+      if (stockMinimo != null) {
+        stock.stockMinimo = Number(stockMinimo);
+      }
+      await manager.save(stock);
+    });
+    return this.findOne(articulo_id);
   }
 
-  async ajustarStock(articulo_id: string, almacen_id: string, delta?: number, stockMinimo?: number): Promise<InventarioArticulo> {
-    const stock = await this.findOrCreateStock(articulo_id, almacen_id);
-    if (delta != null) {
-      const nuevo = Number(stock.stockActual) + Number(delta);
-      if (nuevo < 0) throw new BadRequestException('Stock no puede ser negativo');
-      stock.stockActual = nuevo;
+  // Bloquea la fila de stock (FOR UPDATE) dentro de una transacción para evitar
+  // que dos peticiones concurrentes lean el mismo stockActual y una pise a la otra.
+  // Si la fila no existe todavía se crea sin lock (no hay nada que bloquear);
+  // el índice único (articulo_id, almacen_id) evita duplicados en ese caso raro.
+  private async lockOrCreateStock(
+    manager: import('typeorm').EntityManager,
+    articulo_id: string,
+    almacen_id: string,
+  ): Promise<InventarioStock> {
+    let stock = await manager.findOne(InventarioStock, {
+      where: { articulo_id, almacen_id },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!stock) {
+      stock = await manager.save(manager.create(InventarioStock, { articulo_id, almacen_id, stockActual: 0, stockMinimo: 0 }));
     }
-    if (stockMinimo != null) {
-      stock.stockMinimo = Number(stockMinimo);
-    }
-    await this.stockRepo.save(stock);
-    return this.findOne(articulo_id);
+    return stock;
   }
 
   // ── Artículos por visita ──────────────────────────────────────────────────
@@ -128,38 +142,43 @@ export class InventarioService {
     }
 
     const art = await this.findOne(dto.articulo_id);
-    const stock = await this.findOrCreateStock(dto.articulo_id, visita.almacen_id);
-
     const cantNum = Number(dto.cantidad);
-    if (Number(stock.stockActual) < cantNum) {
-      throw new BadRequestException(
-        `Stock insuficiente en ${stock.almacen?.nombre ?? 'el almacén'}: disponible ${stock.stockActual} ${art.unidad}`,
-      );
-    }
 
-    stock.stockActual = Number(stock.stockActual) - cantNum;
-    await this.stockRepo.save(stock);
+    const nuevaLinea = await this.dataSource.transaction(async manager => {
+      const stock = await this.lockOrCreateStock(manager, dto.articulo_id, visita.almacen_id!);
+      if (Number(stock.stockActual) < cantNum) {
+        throw new BadRequestException(
+          `Stock insuficiente en ${stock.almacen?.nombre ?? 'el almacén'}: disponible ${stock.stockActual} ${art.unidad}`,
+        );
+      }
+      stock.stockActual = Number(stock.stockActual) - cantNum;
+      await manager.save(stock);
 
-    return this.vaRepo.save(this.vaRepo.create({
-      visita_id,
-      articulo_id: dto.articulo_id,
-      almacen_id: visita.almacen_id,
-      cantidad: cantNum,
-      precioUnitario: dto.precioUnitario ?? art.precioUnitario,
-      notas: dto.notas,
-    }));
+      return manager.save(manager.create(VisitaArticulo, {
+        visita_id,
+        articulo_id: dto.articulo_id,
+        almacen_id: visita.almacen_id!,
+        cantidad: cantNum,
+        precioUnitario: dto.precioUnitario ?? art.precioUnitario,
+        notas: dto.notas,
+      }));
+    });
+
+    return nuevaLinea;
   }
 
   async removeFromVisita(id: string): Promise<void> {
     const va = await this.vaRepo.findOne({ where: { id } });
     if (!va) throw new NotFoundException(`Línea ${id} no encontrada`);
 
-    if (va.almacen_id) {
-      const stock = await this.findOrCreateStock(va.articulo_id, va.almacen_id);
-      stock.stockActual = Number(stock.stockActual) + Number(va.cantidad);
-      await this.stockRepo.save(stock);
-    }
-    await this.vaRepo.remove(va);
+    await this.dataSource.transaction(async manager => {
+      if (va.almacen_id) {
+        const stock = await this.lockOrCreateStock(manager, va.articulo_id, va.almacen_id);
+        stock.stockActual = Number(stock.stockActual) + Number(va.cantidad);
+        await manager.save(stock);
+      }
+      await manager.remove(va);
+    });
   }
 
   // ── Historial ─────────────────────────────────────────────────────────────
