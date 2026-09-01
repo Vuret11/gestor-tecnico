@@ -7,10 +7,16 @@ import { CreateArticuloDto } from './dto/create-articulo.dto';
 import { CreateAlmacenDto } from './dto/create-almacen.dto';
 import { AddVisitaArticuloDto } from './dto/add-visita-articulo.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Rol } from '../common/enums/rol.enum';
 
+// Gestión de inventario: la app móvil no llama a ninguna ruta de este
+// módulo (el material se añade a una visita desde el dashboard).
 @ApiTags('inventario')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Rol.ADMIN, Rol.OFICINA)
 @Controller('inventario')
 export class InventarioController {
   constructor(private readonly service: InventarioService) {}

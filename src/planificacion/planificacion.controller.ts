@@ -3,11 +3,17 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Rol } from '../common/enums/rol.enum';
 import { PlanificacionService } from './planificacion.service';
 
+// Módulo de planificación de oficina: los técnicos consumen su agenda vía
+// /visitas/mis-visitas, no directamente estas rutas.
 @ApiTags('planificacion')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Rol.ADMIN, Rol.OFICINA)
 @Controller('planificacion')
 export class PlanificacionController {
   constructor(private readonly svc: PlanificacionService) {}
