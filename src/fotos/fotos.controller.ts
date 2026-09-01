@@ -57,9 +57,12 @@ export class FotosController {
 
     if (file) {
       if (useCloudinary) {
+        // Cloudinary bloquea por seguridad la entrega de PDF/ZIP subidos como 'image' o 'auto';
+        // 'raw' sirve el archivo tal cual y evita el bloqueo.
+        const resourceType = file.mimetype?.startsWith('image/') ? 'auto' : 'raw';
         const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: 'gestor-tecnico', resource_type: 'auto' },
+            { folder: 'gestor-tecnico', resource_type: resourceType },
             (error, res) => {
               if (error || !res) reject(error ?? new Error('Cloudinary upload failed'));
               else resolve(res);
