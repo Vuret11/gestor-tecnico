@@ -328,14 +328,43 @@ export class PlanificacionService {
           if (nuevoTecnico?.user_id) visita.tecnico_id = nuevoTecnico.user_id;
         }
         if (fechaCambia) {
-          const [h, m, s] = visita.fechaProgramada.toISOString().split('T')[1].split(':');
-          visita.fechaProgramada = new Date(`${data.fecha}T${h}:${m}:${s}Z`);
+          visita.fechaProgramada = this.moverFechaMismaHoraLocal(visita.fechaProgramada, data.fecha!);
         }
         await this.visitas.save(visita);
       }
     }
 
     return this.asignaciones.findOne({ where: { id }, relations: { tecnico: true, obra: true } });
+  }
+
+  // Mueve una fecha/hora a otro día conservando la misma hora local (Europe/Madrid),
+  // no la misma hora UTC. Necesario porque un cambio de fecha puede cruzar un
+  // cambio de horario (DST): reaplicar la misma hora UTC desplazaría la cita
+  // una hora en el reloj local del técnico.
+  //
+  // Calcula el offset de Europe/Madrid explícitamente para el día destino y lo
+  // añade a un string ISO con offset (el propio motor de JS resuelve el UTC
+  // correcto a partir de ahí). No usar el truco de "convertir y comparar
+  // diferencias" con toLocaleString: da resultados erróneos si el huso horario
+  // del propio servidor coincide con Europe/Madrid, porque el redondeo se anula.
+  private moverFechaMismaHoraLocal(fechaOriginal: Date, nuevaFechaYYYYMMDD: string): Date {
+    const TZ = 'Europe/Madrid';
+    const horaFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    });
+    const partes = horaFmt.formatToParts(fechaOriginal);
+    const get = (tipo: string) => partes.find(p => p.type === tipo)!.value;
+    const [h, m, s] = [get('hour'), get('minute'), get('second')];
+
+    // Offset en el mediodía UTC del día destino, para no caer justo en el
+    // instante ambiguo del cambio de hora.
+    const offsetFmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, timeZoneName: 'shortOffset' });
+    const mediodiaUtc = new Date(`${nuevaFechaYYYYMMDD}T12:00:00Z`);
+    const offsetPart = offsetFmt.formatToParts(mediodiaUtc).find(p => p.type === 'timeZoneName')!.value;
+    const offsetHoras = Number(offsetPart.replace('GMT', '')) || 0;
+    const offsetStr = `${offsetHoras >= 0 ? '+' : '-'}${String(Math.abs(offsetHoras)).padStart(2, '0')}:00`;
+
+    return new Date(`${nuevaFechaYYYYMMDD}T${h}:${m}:${s}${offsetStr}`);
   }
 
   async removeAsignacion(id: string) {
