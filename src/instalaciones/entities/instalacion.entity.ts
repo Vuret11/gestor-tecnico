@@ -3,6 +3,7 @@ import {
   UpdateDateColumn, ManyToOne, JoinColumn,
 } from 'typeorm';
 import { Cliente } from '../../clientes/entities/cliente.entity';
+import { ChecklistPlantilla } from '../../checklists/entities/checklist-plantilla.entity';
 
 @Entity('instalaciones')
 export class Instalacion {
@@ -58,6 +59,13 @@ export class Instalacion {
 
   @Column({ type: 'varchar', nullable: true })
   tipoInstalacion: string | null;
+
+  @ManyToOne(() => ChecklistPlantilla, { eager: true, nullable: true })
+  @JoinColumn({ name: 'checklistPlantillaId' })
+  checklistPlantilla: ChecklistPlantilla | null;
+
+  @Column({ nullable: true })
+  checklistPlantillaId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   importe?: number;

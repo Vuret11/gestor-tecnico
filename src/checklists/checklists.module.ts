@@ -7,6 +7,7 @@ import { ChecklistSeccion } from './entities/checklist-seccion.entity';
 import { ChecklistItem } from './entities/checklist-item.entity';
 import { VisitaChecklist } from './entities/visita-checklist.entity';
 import { VisitaRespuesta } from './entities/visita-respuesta.entity';
+import { Visita } from '../visitas/entities/visita.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { VisitaRespuesta } from './entities/visita-respuesta.entity';
       ChecklistItem,
       VisitaChecklist,
       VisitaRespuesta,
+      Visita,
     ]),
   ],
   controllers: [ChecklistsController],

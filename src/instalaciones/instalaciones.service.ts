@@ -42,6 +42,8 @@ export class InstalacionesService {
     // Limpiar la relación eager para que TypeORM use la columna FK recién asignada
     if (dto.clienteId) inst.clienteData = { id: dto.clienteId } as any;
     else if (dto.clienteId === null) inst.clienteData = undefined as any;
+    if (dto.checklistPlantillaId) inst.checklistPlantilla = { id: dto.checklistPlantillaId } as any;
+    else if (dto.checklistPlantillaId === null) inst.checklistPlantilla = undefined as any;
     await this.repo.save(inst);
     return this.findOne(id);
   }

@@ -47,6 +47,10 @@ export class CreateInstalacionDto {
   @IsOptional() @IsString() @IsIn(['fv', 'rite', 'otro'])
   tipoInstalacion?: string;
 
+  @ApiPropertyOptional({ description: 'Plantilla de checklist elegida para esta instalación (si no se indica, se autoselecciona por tipo)' })
+  @IsOptional() @IsUUID()
+  checklistPlantillaId?: string;
+
   @ApiPropertyOptional({ example: 12500.00 })
   @IsOptional() @Type(() => Number) @IsNumber()
   importe?: number;

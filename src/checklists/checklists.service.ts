@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Or, Repository } from 'typeorm';
+import { IsNull, Or, Repository } from 'typeorm';
 import { ChecklistPlantilla } from './entities/checklist-plantilla.entity';
 import { VisitaChecklist } from './entities/visita-checklist.entity';
 import { VisitaRespuesta } from './entities/visita-respuesta.entity';
+import { Visita } from '../visitas/entities/visita.entity';
 import { CreatePlantillaDto } from './dto/create-plantilla.dto';
 import { GuardarRespuestasDto } from './dto/guardar-respuestas.dto';
 
@@ -19,7 +20,7 @@ export class ChecklistsService {
     @InjectRepository(ChecklistPlantilla) private plantillasRepo: Repository<ChecklistPlantilla>,
     @InjectRepository(VisitaChecklist) private vcRepo: Repository<VisitaChecklist>,
     @InjectRepository(VisitaRespuesta) private respRepo: Repository<VisitaRespuesta>,
-    private dataSource: DataSource,
+    @InjectRepository(Visita) private visitasRepo: Repository<Visita>,
   ) {}
 
   findAllPlantillas() {
@@ -86,17 +87,16 @@ export class ChecklistsService {
     let resolvedPlantillaId = plantillaId;
 
     if (!resolvedPlantillaId) {
-      // Auto-seleccionar plantilla según tipo de instalación de la visita
-      const rows: { tipo: string }[] = await this.dataSource.query(
-        `SELECT i.tipo_instalacion AS tipo
-         FROM visitas v
-         JOIN instalaciones i ON i.id = v.instalacion_id
-         WHERE v.id = $1`, [visitaId],
-      );
-      const tipo = rows[0]?.tipo;
-      if (tipo) {
-        const plantillas = await this.findPlantillasByTipo(tipo);
-        resolvedPlantillaId = plantillas.find(p => p.tipoInstalacion === tipo)?.id
+      const visita = await this.visitasRepo.findOne({ where: { id: visitaId } });
+      const instalacion = visita?.instalacion;
+
+      // 1. Plantilla elegida explícitamente en la instalación
+      resolvedPlantillaId = instalacion?.checklistPlantillaId ?? undefined;
+
+      // 2. Si no hay elegida, autoseleccionar por tipo de instalación
+      if (!resolvedPlantillaId && instalacion?.tipoInstalacion) {
+        const plantillas = await this.findPlantillasByTipo(instalacion.tipoInstalacion);
+        resolvedPlantillaId = plantillas.find(p => p.tipoInstalacion === instalacion.tipoInstalacion)?.id
           ?? plantillas[0]?.id;
       }
     }
