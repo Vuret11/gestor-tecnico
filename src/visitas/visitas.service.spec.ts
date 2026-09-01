@@ -4,6 +4,9 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { VisitasService } from './visitas.service';
 import { Visita } from './entities/visita.entity';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { PlanTecnico } from '../planificacion/entities/plan-tecnico.entity';
+import { PlanObra } from '../planificacion/entities/plan-obra.entity';
+import { PlanAsignacion } from '../planificacion/entities/plan-asignacion.entity';
 import { EstadoVisita } from '../common/enums/estado-visita.enum';
 import { TipoVisita } from '../common/enums/tipo-visita.enum';
 
@@ -58,6 +61,11 @@ describe('VisitasService', () => {
       providers: [
         VisitasService,
         { provide: getRepositoryToken(Visita), useValue: repo },
+        // syncAsignacion() no-opea si no encuentra PlanTecnico, así que un
+        // findOne que resuelve null basta para no afectar estos tests.
+        { provide: getRepositoryToken(PlanTecnico), useValue: { findOne: jest.fn().mockResolvedValue(null) } },
+        { provide: getRepositoryToken(PlanObra), useValue: { findOne: jest.fn().mockResolvedValue(null) } },
+        { provide: getRepositoryToken(PlanAsignacion), useValue: { findOne: jest.fn().mockResolvedValue(null), save: jest.fn() } },
         {
           provide: NotificationsGateway,
           useValue: { notifyUser: (notifyUser = jest.fn()) },
