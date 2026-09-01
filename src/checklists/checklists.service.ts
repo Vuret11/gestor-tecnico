@@ -117,21 +117,19 @@ export class ChecklistsService {
     const vc = await this.findByVisita(visitaId);
     if (!vc) throw new NotFoundException('Checklist no encontrado para esta visita');
 
-    for (const r of dto.respuestas) {
-      const existing = await this.respRepo.findOne({
-        where: { checklistId: vc.id, itemId: r.itemId },
-      });
+    // Una sola consulta para las existentes en vez de un findOne por respuesta,
+    // y los guardados en paralelo en vez de uno a uno.
+    const existentes = await this.respRepo.find({ where: { checklistId: vc.id } });
+    const porItemId = new Map(existentes.map(r => [r.itemId, r]));
+
+    await Promise.all(dto.respuestas.map(r => {
+      const existing = porItemId.get(r.itemId);
       if (existing) {
         existing.valor = r.valor ?? null;
-        await this.respRepo.save(existing);
-      } else {
-        const nueva = this.respRepo.create();
-        nueva.checklistId = vc.id;
-        nueva.itemId = r.itemId;
-        nueva.valor = r.valor ?? null;
-        await this.respRepo.save(nueva);
+        return this.respRepo.save(existing);
       }
-    }
+      return this.respRepo.save(this.respRepo.create({ checklistId: vc.id, itemId: r.itemId, valor: r.valor ?? null }));
+    }));
 
     if (dto.firmante) {
       vc.firmante = dto.firmante;
