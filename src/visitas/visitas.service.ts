@@ -1,10 +1,13 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Visita } from './entities/visita.entity';
 import { CreateVisitaDto } from './dto/create-visita.dto';
 import { UpdateVisitaDto } from './dto/update-visita.dto';
 import { EstadoVisita } from '../common/enums/estado-visita.enum';
+import { Rol } from '../common/enums/rol.enum';
+
+type Requester = { id: string; rol: string };
 import { NotificationsGateway, VisitaNotificacion } from '../notifications/notifications.gateway';
 import { buildCsv, formatDate } from '../common/utils/csv.util';
 import { PlanTecnico } from '../planificacion/entities/plan-tecnico.entity';
@@ -133,9 +136,12 @@ export class VisitasService {
     });
   }
 
-  async findOne(id: string): Promise<Visita> {
+  async findOne(id: string, requester?: Requester): Promise<Visita> {
     const visita = await this.repo.findOne({ where: { id }, relations: RELATIONS });
     if (!visita) throw new NotFoundException(`Visita ${id} no encontrada`);
+    if (requester?.rol === Rol.TECNICO && visita.tecnico_id !== requester.id) {
+      throw new ForbiddenException('No tienes acceso a esta visita');
+    }
     return visita;
   }
 
@@ -167,14 +173,16 @@ export class VisitasService {
     return visita;
   }
 
-  async checkin(id: string): Promise<Visita> {
+  async checkin(id: string, requester?: Requester): Promise<Visita> {
+    await this.findOne(id, requester);
     return this.update(id, {
       estado: EstadoVisita.EN_CURSO,
       fechaInicio: new Date().toISOString(),
     });
   }
 
-  async checkout(id: string): Promise<Visita> {
+  async checkout(id: string, requester?: Requester): Promise<Visita> {
+    await this.findOne(id, requester);
     return this.update(id, {
       estado: EstadoVisita.COMPLETADA,
       fechaFin: new Date().toISOString(),

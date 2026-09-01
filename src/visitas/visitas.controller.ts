@@ -70,9 +70,10 @@ export class VisitasController {
   }
 
   @ApiOperation({ summary: 'Obtener visita por ID' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.service.findOne(id, user);
   }
 
   @ApiOperation({ summary: 'Actualizar visita' })
@@ -83,15 +84,17 @@ export class VisitasController {
   }
 
   @ApiOperation({ summary: 'Check-in: iniciar visita' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Patch(':id/checkin')
-  checkin(@Param('id') id: string) {
-    return this.service.checkin(id);
+  checkin(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.service.checkin(id, user);
   }
 
   @ApiOperation({ summary: 'Check-out: finalizar visita' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Patch(':id/checkout')
-  checkout(@Param('id') id: string) {
-    return this.service.checkout(id);
+  checkout(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.service.checkout(id, user);
   }
 
   @ApiOperation({ summary: 'Cancelar visita' })
