@@ -57,7 +57,7 @@ export class UsersService {
 
   async setPushToken(id: string, expoPushToken: string | null): Promise<User> {
     const user = await this.findOne(id);
-    user.expoPushToken = expoPushToken;
+    user.expoPushToken = expoPushToken as any;
     return this.repo.save(user);
   }
 }

@@ -36,7 +36,7 @@ export class User {
   modulosAcceso: string[] | null;
 
   @Column({ nullable: true })
-  expoPushToken: string | null;
+  expoPushToken: string;
 
   @CreateDateColumn()
   createdAt: Date;
