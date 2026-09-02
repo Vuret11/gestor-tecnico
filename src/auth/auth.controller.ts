@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -30,5 +30,13 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: { id: string }) {
     return this.usersService.findOne(user.id);
+  }
+
+  @ApiOperation({ summary: 'Registrar el token de notificaciones push del dispositivo' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Patch('push-token')
+  setPushToken(@CurrentUser() user: { id: string }, @Body('expoPushToken') expoPushToken: string | null) {
+    return this.usersService.setPushToken(user.id, expoPushToken ?? null);
   }
 }

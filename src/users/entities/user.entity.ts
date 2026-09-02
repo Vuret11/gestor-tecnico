@@ -35,6 +35,9 @@ export class User {
   @Column({ type: 'json', nullable: true, default: null })
   modulosAcceso: string[] | null;
 
+  @Column({ nullable: true })
+  expoPushToken: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

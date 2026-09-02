@@ -3,6 +3,17 @@ import {
   SubscribeMessage, MessageBody, ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+
+const PUSH_TITULOS: Record<string, string> = {
+  'nueva-visita': 'Nueva visita asignada',
+  'visita-cancelada': 'Visita cancelada',
+  'visita-actualizada': 'Visita actualizada',
+  'incidencia-asignada': 'Incidencia asignada',
+  'incidencia-desasignada': 'Incidencia desasignada',
+};
 
 export interface VisitaNotificacion {
   visitaId: string;
@@ -23,6 +34,10 @@ export interface IncidenciaNotificacion {
 export class NotificationsGateway {
   @WebSocketServer() server: Server;
 
+  constructor(
+    @InjectRepository(User) private usersRepo: Repository<User>,
+  ) {}
+
   private userSockets = new Map<string, Set<string>>();
 
   @SubscribeMessage('register')
@@ -35,11 +50,36 @@ export class NotificationsGateway {
     });
   }
 
-  notifyUser(userId: string, event: string, payload: object) {
+  notifyUser(userId: string, event: string, payload: any) {
     const sockets = this.userSockets.get(userId);
-    if (!sockets?.size) return;
-    sockets.forEach(socketId => {
-      this.server.to(socketId).emit(event, payload);
+    if (sockets?.size) {
+      sockets.forEach(socketId => {
+        this.server.to(socketId).emit(event, payload);
+      });
+    }
+    // Push a la app móvil (independiente de si hay un socket conectado):
+    // no bloqueamos ni propagamos errores, es un aviso best-effort.
+    this.sendPush(userId, event, payload).catch(err =>
+      console.error('Error enviando push notification:', err),
+    );
+  }
+
+  private async sendPush(userId: string, event: string, payload: any): Promise<void> {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user?.expoPushToken) return;
+
+    const titulo = PUSH_TITULOS[event] ?? 'HomeServe Solar';
+    const cuerpo = payload?.titulo ?? payload?.instalacionNombre ?? '';
+
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        to: user.expoPushToken,
+        title: titulo,
+        body: cuerpo,
+        data: { event, ...payload },
+      }),
     });
   }
 }

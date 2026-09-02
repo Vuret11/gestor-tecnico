@@ -54,4 +54,10 @@ export class UsersService {
     user.modulosAcceso = modulosAcceso;
     return this.repo.save(user);
   }
+
+  async setPushToken(id: string, expoPushToken: string | null): Promise<User> {
+    const user = await this.findOne(id);
+    user.expoPushToken = expoPushToken;
+    return this.repo.save(user);
+  }
 }
