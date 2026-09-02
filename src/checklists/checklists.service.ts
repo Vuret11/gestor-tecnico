@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Or, Repository } from 'typeorm';
 import { ChecklistPlantilla } from './entities/checklist-plantilla.entity';
@@ -7,6 +7,8 @@ import { VisitaRespuesta } from './entities/visita-respuesta.entity';
 import { Visita } from '../visitas/entities/visita.entity';
 import { CreatePlantillaDto } from './dto/create-plantilla.dto';
 import { GuardarRespuestasDto } from './dto/guardar-respuestas.dto';
+
+const MINUTOS_CORRECCION = 30;
 
 const PLANTILLA_RELATIONS = { secciones: { items: true } } as const;
 const VC_RELATIONS = {
@@ -116,6 +118,15 @@ export class ChecklistsService {
   async guardarRespuestas(visitaId: string, dto: GuardarRespuestasDto) {
     const vc = await this.findByVisita(visitaId);
     if (!vc) throw new NotFoundException('Checklist no encontrado para esta visita');
+
+    if (vc.completadoEn) {
+      const minutosTranscurridos = (Date.now() - new Date(vc.completadoEn).getTime()) / 60000;
+      if (minutosTranscurridos > MINUTOS_CORRECCION) {
+        throw new ForbiddenException(
+          `Este checklist ya no se puede corregir: han pasado más de ${MINUTOS_CORRECCION} minutos desde que se completó.`,
+        );
+      }
+    }
 
     // Una sola consulta para las existentes en vez de un findOne por respuesta,
     // y los guardados en paralelo en vez de uno a uno.
