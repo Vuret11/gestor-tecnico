@@ -108,9 +108,14 @@ export class InventarioService {
     articulo_id: string,
     almacen_id: string,
   ): Promise<InventarioStock> {
+    // loadEagerRelations: false — Postgres no permite FOR UPDATE sobre una fila
+    // unida por LEFT JOIN, y la relación `almacen` de InventarioStock es eager
+    // (TypeORM siempre la carga con LEFT JOIN). Sin esto, findOne con lock
+    // lanza "FOR UPDATE cannot be applied to the nullable side of an outer join".
     let stock = await manager.findOne(InventarioStock, {
       where: { articulo_id, almacen_id },
       lock: { mode: 'pessimistic_write' },
+      loadEagerRelations: false,
     });
     if (!stock) {
       stock = await manager.save(manager.create(InventarioStock, { articulo_id, almacen_id, stockActual: 0, stockMinimo: 0 }));
@@ -147,8 +152,9 @@ export class InventarioService {
     const nuevaLinea = await this.dataSource.transaction(async manager => {
       const stock = await this.lockOrCreateStock(manager, dto.articulo_id, visita.almacen_id!);
       if (Number(stock.stockActual) < cantNum) {
+        const almacen = await this.almacenRepo.findOne({ where: { id: visita.almacen_id! } });
         throw new BadRequestException(
-          `Stock insuficiente en ${stock.almacen?.nombre ?? 'el almacén'}: disponible ${stock.stockActual} ${art.unidad}`,
+          `Stock insuficiente en ${almacen?.nombre ?? 'el almacén'}: disponible ${stock.stockActual} ${art.unidad}`,
         );
       }
       stock.stockActual = Number(stock.stockActual) - cantNum;
