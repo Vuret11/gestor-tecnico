@@ -53,11 +53,40 @@ export class ProyectoIngenieria {
   @Column({ nullable: true })
   direccion: string;
 
+  // Numero de obra: lo pone a mano el departamento (no viene de ningun sitio)
+  @Column({ nullable: true })
+  num_obra: string;
+
+  // Estado real de la obra (los 9 del registro de obras) y su avance en %: para el cuadro
+  // de mando por estado, igual que el informe en PDF
+  @Column({ nullable: true })
+  estado_obra: string;
+
+  @Column({ type: 'int', nullable: true })
+  progreso: number;
+
+  // Jefe de obra de la constructora y su contacto (telefono o correo)
+  @Column({ nullable: true })
+  jefe_obra: string;
+
+  @Column({ nullable: true })
+  jefe_obra_contacto: string;
+
   @Column({ nullable: true })
   provincia: string;
 
   @Column({ nullable: true, type: 'text' })
   notas: string;
+
+  // Disciplinas de la obra (mismo vocabulario que el registro de obras):
+  // solar, electricidad, climatizacion, fontaneria, ventilacion, saneamiento, pci, telecom, aerotermia
+  @Column({ type: 'simple-array', nullable: true })
+  disciplinas: string[];
+
+  // Responsables en Ingenieria (Alejandro, Lorena, Miguel, Sergio, Ariel, Salva).
+  // Lista porque una obra puede llevarla mas de una persona.
+  @Column({ type: 'simple-array', nullable: true })
+  responsables: string[];
 
   @Column({ nullable: true })
   tecnico_id: string;

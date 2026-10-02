@@ -1,3 +1,4 @@
+import { Maquina } from './maquinas/entities/maquina.entity';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -24,7 +25,12 @@ import { InventarioStock } from './inventario/entities/inventario-stock.entity';
 import { Almacen } from './inventario/entities/almacen.entity';
 import { VisitaArticulo } from './inventario/entities/visita-articulo.entity';
 import { IngenieriaModule } from './ingenieria/ingenieria.module';
+import { TareasModule } from './tareas/tareas.module';
+import { LegalizacionesModule } from './legalizaciones/legalizaciones.module';
+import { MaquinasModule } from './maquinas/maquinas.module';
 import { ProyectoIngenieria } from './ingenieria/entities/proyecto-ingenieria.entity';
+import { Tarea } from './tareas/entities/tarea.entity';
+import { Legalizacion } from './legalizaciones/entities/legalizacion.entity';
 import { PlanProvincia } from './planificacion/entities/plan-provincia.entity';
 import { PlanTecnico } from './planificacion/entities/plan-tecnico.entity';
 import { PlanCliente } from './planificacion/entities/plan-cliente.entity';
@@ -59,7 +65,35 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
         username: config.get('DB_USER', 'postgres'),
         password: config.get('DB_PASS', 'postgres'),
         database: config.get('DB_NAME', 'gestor_tecnico'),
-        entities: [User, Cliente, Instalacion, Visita, Informe, Foto, Incidencia, ChecklistPlantilla, ChecklistSeccion, ChecklistItem, VisitaChecklist, VisitaRespuesta, PlanProvincia, PlanTecnico, PlanCliente, PlanObra, PlanAsignacion, RepoCarpeta, RepoArchivo, InventarioArticulo, InventarioStock, Almacen, VisitaArticulo, ProyectoIngenieria],
+        entities: [
+      User,
+      Cliente,
+      Instalacion,
+      Visita,
+      Informe,
+      Foto,
+      Incidencia,
+      ChecklistPlantilla,
+      ChecklistSeccion,
+      ChecklistItem,
+      VisitaChecklist,
+      VisitaRespuesta,
+      PlanProvincia,
+      PlanTecnico,
+      PlanCliente,
+      PlanObra,
+      PlanAsignacion,
+      RepoCarpeta,
+      RepoArchivo,
+      InventarioArticulo,
+      InventarioStock,
+      Almacen,
+      VisitaArticulo,
+      ProyectoIngenieria,
+      Tarea,
+      Legalizacion,
+      Maquina,
+    ],
         synchronize: config.get('DB_SYNC') === 'true',
         logging: config.get('NODE_ENV') === 'development',
         ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
@@ -79,6 +113,9 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     RepositorioModule,
     InventarioModule,
     IngenieriaModule,
+    TareasModule,
+    LegalizacionesModule,
+    MaquinasModule,
     NotificationsModule,
   ],
   providers: [

@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsUUID } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsUUID } from 'class-validator';
 import { TipoProyecto, EstadoProyecto } from '../entities/proyecto-ingenieria.entity';
 
 export class CreateProyectoDto {
@@ -11,7 +11,14 @@ export class CreateProyectoDto {
   @IsOptional() @IsNumber() presupuesto?: number;
   @IsOptional() @IsDateString() fechaEntregaEstimada?: string;
   @IsOptional() @IsString() direccion?: string;
+  @IsOptional() @IsString() num_obra?: string;
+  @IsOptional() @IsString() estado_obra?: string;
+  @IsOptional() @IsNumber() progreso?: number;
+  @IsOptional() @IsString() jefe_obra?: string;
+  @IsOptional() @IsString() jefe_obra_contacto?: string;
   @IsOptional() @IsString() provincia?: string;
   @IsOptional() @IsString() notas?: string;
   @IsOptional() @IsUUID() tecnico_id?: string;
+  @IsOptional() @IsArray() @IsString({ each: true }) disciplinas?: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) responsables?: string[];
 }
