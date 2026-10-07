@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Legalizacion, EstadoLegalizacion } from './entities/legalizacion.entity';
@@ -12,6 +12,15 @@ import { User } from '../users/entities/user.entity';
 import { GeneradorDocumentosService } from './documentos/generador.service';
 import { CalcularTramiteService } from './documentos/motor/calcular-tramite.service';
 import { TramiteParaDocumentos, datosQueFaltan } from './documentos/armador';
+
+/**
+ * Permiso de ACCIÓN que autoriza a archivar instalaciones de legalizaciones.
+ *
+ * Va dentro de `usuarios.modulosAcceso` (el mismo sitio que los permisos de pantalla, porque es donde
+ * se dan de uno en uno desde «Permisos») y **no lo tiene ningún rol por defecto**: el rol `tecnico` lo
+ * llevan más de veinte personas (técnicos del proyecto anterior) y no deben poder borrar.
+ */
+export const PERMISO_BORRAR_LEGALIZACIONES = 'borrar_legalizaciones';
 
 @Injectable()
 export class LegalizacionesService {
@@ -74,8 +83,25 @@ export class LegalizacionesService {
     }
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, usuario?: { id?: string; rol?: string }): Promise<void> {
     const l = await this.findOne(id);
+    /**
+     * Archivar una instalación lo hace el admin y los ingenieros autorizados uno a uno.
+     *
+     * Salva, 7-oct-2026: «quiero que todos los ingenieros puedan eliminar las instalaciones de
+     * legalizaciones» … y después aclaró que **ingenieros son 6** (Lorena, Alejandro, Sergio, Miguel,
+     * Ariel y él). El rol `tecnico` lo tienen más de veinte personas (los técnicos de campo), así que
+     * el rol no sirve para esto: manda el permiso `borrar_legalizaciones` de la ficha de cada usuario,
+     * que se da y se quita desde «Permisos» en el panel.
+     */
+    if (usuario?.rol === 'tecnico') {
+      const u = await this.usuarios.findOne({ where: { id: usuario.id } });
+      if (!(u?.modulosAcceso ?? []).includes(PERMISO_BORRAR_LEGALIZACIONES)) {
+        throw new ForbiddenException(
+          'Solo los ingenieros autorizados pueden eliminar instalaciones de legalizaciones.',
+        );
+      }
+    }
     l.activo = false;
     await this.repo.save(l);
   }

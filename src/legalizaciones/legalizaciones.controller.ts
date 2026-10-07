@@ -61,13 +61,12 @@ export class LegalizacionesController {
   }
 
   @ApiOperation({ summary: 'Archivar expediente' })
-  // Los ingenieros también archivan: lo pidió Salva el 7-oct-2026 («quiero que todos los ingenieros
-  // puedan eliminar las instalaciones de legalizaciones»). El borrado es LÓGICO (`activo = false`), así
-  // que un trámite archivado por error se recupera poniendo `activo = true`.
+  // El rol `tecnico` entra aquí, pero el servicio exige además el permiso `borrar_legalizaciones` de la
+  // ficha del usuario: los ingenieros son 6, no las más de veinte personas con ese rol (7-oct-2026).
   @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    return this.service.remove(id, { id: req.user?.sub ?? req.user?.id, rol: req.user?.rol });
   }
 
   @ApiOperation({ summary: 'Etapas del trámite (Inicio, Subida Portal, Finalizado) y su registro' })
