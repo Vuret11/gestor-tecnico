@@ -39,6 +39,7 @@ import { HitoObra } from './ingenieria/entities/hito-obra.entity';
 import { NotaObra } from './ingenieria/entities/nota-obra.entity';
 import { Tarea } from './tareas/entities/tarea.entity';
 import { Legalizacion } from './legalizaciones/entities/legalizacion.entity';
+import { RegistroEtapaLegalizacion } from './legalizaciones/entities/registro-etapa.entity';
 import { ConfigDocumentos } from './legalizaciones/documentos/config-documentos.entity';
 import { PlanProvincia } from './planificacion/entities/plan-provincia.entity';
 import { PlanTecnico } from './planificacion/entities/plan-tecnico.entity';
@@ -107,6 +108,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
       DocumentoObra,
       Tarea,
       Legalizacion,
+      RegistroEtapaLegalizacion,
       Homologacion,
       Maquina,
       ConfigDocumentos,

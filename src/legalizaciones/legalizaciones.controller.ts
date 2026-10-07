@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LegalizacionesService } from './legalizaciones.service';
 import { CreateLegalizacionDto, UpdateLegalizacionDto } from './dto/legalizacion.dto';
+import { EtapaLegalizacion } from './entities/registro-etapa.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -60,9 +61,38 @@ export class LegalizacionesController {
   }
 
   @ApiOperation({ summary: 'Archivar expediente' })
-  @Roles(Rol.ADMIN, Rol.OFICINA)
+  // Los ingenieros también archivan: lo pidió Salva el 7-oct-2026 («quiero que todos los ingenieros
+  // puedan eliminar las instalaciones de legalizaciones»). El borrado es LÓGICO (`activo = false`), así
+  // que un trámite archivado por error se recupera poniendo `activo = true`.
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
+  }
+
+  @ApiOperation({ summary: 'Etapas del trámite (Inicio, Subida Portal, Finalizado) y su registro' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
+  @Get(':id/etapas')
+  etapas(@Param('id') id: string) {
+    return this.service.etapas(id);
+  }
+
+  /**
+   * Marca (o desmarca, con `hecha: false`) una etapa. Cada pulsación deja una fila en el registro con
+   * la fecha y quién lo hizo: lo pidió Salva el 7-oct-2026.
+   */
+  @ApiOperation({ summary: 'Marcar o desmarcar una etapa del trámite' })
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
+  @Post(':id/etapas/:etapa')
+  marcarEtapa(
+    @Param('id') id: string,
+    @Param('etapa') etapa: EtapaLegalizacion,
+    @Body() cuerpo: { hecha?: boolean },
+    @Req() req: any,
+  ) {
+    return this.service.marcarEtapa(id, etapa, cuerpo?.hecha !== false, {
+      id: req.user?.sub ?? req.user?.id,
+      nombre: req.user?.nombre,
+    });
   }
 }
