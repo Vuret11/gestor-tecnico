@@ -71,6 +71,8 @@ export class CreateLegalizacionDto {
   @IsOptional() @IsBoolean() requiere_memoria_tecnica?: boolean;
   /** Observaciones del trámite, una por línea con su fecha delante. */
   @IsOptional() @IsString() observaciones?: string;
+  /** Si el trámite está facturado (columna «Facturada» del listado, pedida por Salva el 7-oct-2026). */
+  @IsOptional() @IsBoolean() facturada?: boolean;
 }
 
 export class UpdateLegalizacionDto extends PartialType(CreateLegalizacionDto) {}

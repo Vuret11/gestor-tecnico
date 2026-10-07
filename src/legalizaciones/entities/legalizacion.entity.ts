@@ -257,6 +257,14 @@ export class Legalizacion {
   @Column({ type: 'text', nullable: true })
   observaciones: string;
 
+  /**
+   * Si el trámite está FACTURADO. Lo pidió Salva el 7-oct-2026 para el listado en tabla: «debemos ver
+   * en una columna más si está facturada». Se marca desde el propio listado (pulsando la casilla) y
+   * desde la ficha del trámite (al editarla).
+   */
+  @Column({ type: 'boolean', default: false })
+  facturada: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

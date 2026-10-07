@@ -48,14 +48,29 @@ export class LegalizacionesService {
      */
     const registros = await this.etapasRepo.find({ order: { fecha: 'ASC', createdAt: 'ASC' } });
     const ultima = new Map<string, boolean>();
-    for (const r of registros) ultima.set(`${r.legalizacionId}|${r.etapa}`, r.hecha);
+    const fechaUltima = new Map<string, Date>();
+    for (const r of registros) {
+      const clave = `${r.legalizacionId}|${r.etapa}`;
+      ultima.set(clave, r.hecha);
+      fechaUltima.set(clave, r.fecha);
+    }
 
-    return tramites.map((t) => ({
-      ...t,
-      etapas_hechas: ETAPAS_LEGALIZACION.filter((e) => ultima.get(`${t.id}|${e.etapa}`) === true).map(
-        (e) => e.etapa,
-      ),
-    }));
+    /**
+     * `etapa_fecha` = cuándo se marcó la etapa en la que está AHORA el trámite. La usa el tablero para
+     * poner arriba las tarjetas que llevan más tiempo en esa columna (Salva, 7-oct-2026: «en la columna
+     * de creación deben de aparecer las que lleven más tiempo arriba»). Si no tiene ninguna etapa
+     * marcada, se cuenta la fecha de inicio del expediente.
+     */
+    return tramites.map((t) => {
+      const hechas = ETAPAS_LEGALIZACION.filter((e) => ultima.get(`${t.id}|${e.etapa}`) === true);
+      const ultimaHecha = hechas[hechas.length - 1];
+      const fechaEtapa = ultimaHecha ? fechaUltima.get(`${t.id}|${ultimaHecha.etapa}`) ?? null : null;
+      return {
+        ...t,
+        etapas_hechas: hechas.map((e) => e.etapa),
+        etapa_fecha: (fechaEtapa ?? (t.fecha_inicio ? new Date(t.fecha_inicio) : null))?.toISOString() ?? null,
+      };
+    });
   }
 
   async findOne(id: string): Promise<Legalizacion> {
