@@ -32,11 +32,28 @@ export class LegalizacionesService {
     private readonly calculo: CalcularTramiteService,
   ) {}
 
-  findAll(f: { estado?: EstadoLegalizacion; responsable?: string }) {
+  async findAll(f: { estado?: EstadoLegalizacion; responsable?: string }) {
     const where: any = { activo: true };
     if (f.estado) where.estado = f.estado;
     if (f.responsable) where.responsable = f.responsable;
-    return this.repo.find({ where, order: { id_externo: 'ASC' } });
+    const tramites = await this.repo.find({ where, order: { id_externo: 'ASC' } });
+
+    /**
+     * El tablero del panel (Salva, 7-oct-2026: «quiero que hayan tres etapas, deben estar arriba, por
+     * columnas, y se pueden arrastrar entre ellas») necesita saber en qué etapa está cada trámite, y no
+     * puede ir preguntando ficha a ficha. Se traen TODOS los registros de una vez y se resuelve en
+     * memoria: el estado de una etapa es su ÚLTIMA fila (el registro no se borra nunca).
+     */
+    const registros = await this.etapasRepo.find({ order: { fecha: 'ASC', createdAt: 'ASC' } });
+    const ultima = new Map<string, boolean>();
+    for (const r of registros) ultima.set(`${r.legalizacionId}|${r.etapa}`, r.hecha);
+
+    return tramites.map((t) => ({
+      ...t,
+      etapas_hechas: ETAPAS_LEGALIZACION.filter((e) => ultima.get(`${t.id}|${e.etapa}`) === true).map(
+        (e) => e.etapa,
+      ),
+    }));
   }
 
   async findOne(id: string): Promise<Legalizacion> {
@@ -161,6 +178,36 @@ export class LegalizacionesService {
       throw new BadRequestException(
         `Etapa «${etapa}» no existe. Las etapas son: ${ETAPAS_LEGALIZACION.map((e) => e.etapa).join(', ')}`,
       );
+    }
+
+    /**
+     * LAS ETAPAS VAN EN ORDEN. Lo pidió Salva el 7-oct-2026 con la ficha delante: «no podemos dar al
+     * botón subido o finalizado sin pasar por Inicio». Se comprueba ANTES de escribir, para no dejar
+     * un registro que cuente algo que no ha pasado:
+     *  - marcar una etapa exige la anterior hecha (Subida Portal necesita Inicio; Finalizado, Subida
+     *    Portal),
+     *  - y una etapa hecha no se desmarca si hay una posterior hecha (para deshacer, primero la de
+     *    después).
+     */
+    const estado = await this.etapas(id);
+    const posicion = ETAPAS_LEGALIZACION.findIndex((e) => e.etapa === etapa);
+    const estaHecha = (cual: EtapaLegalizacion) =>
+      estado.etapas.find((e) => e.etapa === cual)?.hecha ?? false;
+
+    if (hecha) {
+      const anterior = ETAPAS_LEGALIZACION[posicion - 1];
+      if (anterior && !estaHecha(anterior.etapa)) {
+        throw new BadRequestException(
+          `Para marcar «${ETAPAS_LEGALIZACION[posicion].etiqueta}» hay que marcar antes «${anterior.etiqueta}».`,
+        );
+      }
+    } else {
+      const posterior = ETAPAS_LEGALIZACION.slice(posicion + 1).find((e) => estaHecha(e.etapa));
+      if (posterior) {
+        throw new BadRequestException(
+          `No se puede desmarcar «${ETAPAS_LEGALIZACION[posicion].etiqueta}» con «${posterior.etiqueta}» ya marcada: desmarca primero «${posterior.etiqueta}».`,
+        );
+      }
     }
     // El token lleva el id y el rol, pero no el nombre: se busca en la tabla para poder decir QUIÉN
     // marcó la etapa (y que se siga leyendo dentro de un año aunque cambie la cuenta).
