@@ -45,6 +45,14 @@ export interface ContextoMod315 {
    * AMPLIACIÓN DE EXISTENTE» del punto 1 de la memoria y decide el texto de OBSERVACIONES.
    */
   tipoInstalacion: 'NUEVA' | 'REFORMA';
+  /**
+   * La instalación es de **aire acondicionado** (climatización sola, uso `SOLO_CLIMATIZACION`): un split
+   * que enfría (y calienta) pero no produce ACS. Lo pidió Salva el 7-oct-2026 con las anotaciones de
+   * Ariel: para estas instalaciones el bloque «Datos Bomba de Calor» no se rellena, se rellena el de
+   * «Datos Aire Acondicionado», la columna CLIMATIZACIÓN de regulación y control SÍ se marca, y en
+   * OBSERVACIONES se escribe «INSTALACIÓN NUEVA AIRE ACONDICIONADO».
+   */
+  esAireAcondicionado: boolean;
   /** Tipo de emisor usado en el cálculo de demanda (Módulo 2), si se usó el modo automático — null si fue manual o si no hay CalculoDemanda vinculado. */
   tipoEmisor: TipoEmisor | null;
   /** Emisores marcados en el expediente (puede haber varios, 2026-09-29). */

@@ -226,6 +226,14 @@ const PERSONA_AUTORIZADA = {
  *  - REFORMA: REFORMA DE CAMBIO DE CALDERA A AEROTERMIA SIN MODIFICACIÓN DE INSTALACIÓN INTERIOR».
  */
 function observacionesPunto1(ctx: ContextoMod315): string {
+  // Aire acondicionado (climatización sola): ni aerotermia ni geotermia. Lo pidió Salva el 7-oct-2026
+  // con las anotaciones de Ariel en el impreso: «En observaciones: INSTALACIÓN NUEVA AIRE
+  // ACONDICIONADO».
+  if (ctx.esAireAcondicionado) {
+    return ctx.tipoInstalacion === 'REFORMA'
+      ? 'REFORMA DE INSTALACIÓN DE AIRE ACONDICIONADO'
+      : 'INSTALACIÓN NUEVA AIRE ACONDICIONADO';
+  }
   if (ctx.tipoInstalacion === 'REFORMA') {
     return 'REFORMA DE CAMBIO DE CALDERA A AEROTERMIA SIN MODIFICACIÓN DE INSTALACIÓN INTERIOR';
   }

@@ -9,6 +9,19 @@ import { TipoUsoMaquina } from '../crm/tipos';
 import { demandaAcs, eresAnualKWh, qusableAnualKWh } from './calculo-cte';
 
 /**
+ * Campos del trámite que SOLO tienen sentido si la instalación produce ACS: su demanda diaria, el
+ * Qusable y el Eres (que salen de esa demanda) y el volumen del acumulador. Cuando el uso declarado es
+ * «climatización sola» se vacían si venían puestos (ver `calcular`), que es el «recorte» que pidió
+ * Salva el 7-oct-2026 para la legalización de Ariel (un split de aire acondicionado).
+ */
+const CAMPOS_QUE_SOLO_TIENEN_SENTIDO_CON_ACS: (keyof Legalizacion)[] = [
+  'acs_demanda_diaria_60c',
+  'qusable_anual_kwh',
+  'eres_anual_kwh',
+  'acs_volumen_acumulador_l',
+];
+
+/**
  * Rellena en el trámite los datos que CALCULA EL PROGRAMA, para no pedírselos a nadie.
  *
  * Pedido del instalador el 2-oct-2026: «todo esto no debería aparecer, esto es lo que calculas tú
@@ -28,7 +41,6 @@ import { demandaAcs, eresAnualKWh, qusableAnualKWh } from './calculo-cte';
 @Injectable()
 export class CalcularTramiteService {
   private readonly log = new Logger(CalcularTramiteService.name);
-
   constructor(@InjectRepository(Maquina) private readonly maquinas: Repository<Maquina>) {}
 
   /**
@@ -51,7 +63,18 @@ export class CalcularTramiteService {
     // calculan y esas casillas del MOD-315 salen en blanco. Antes se calculaban siempre y un trámite
     // sin ACS habría declarado una demanda de agua caliente que no existe.
     // El uso declarado del trámite manda; si no lo dice, el de la máquina principal.
-    if (!(await this.produceAcs(tramite))) return cambios;
+    if (!(await this.produceAcs(tramite))) {
+      // Y si ya venían puestos, se VACÍAN. Lo pidió Salva el 7-oct-2026: «la última legalización que
+      // le he hecho a Ariel está mal: es solo climatización, es un split, un aire acondicionado». Un
+      // trámite que primero se declaró con ACS y luego se corrige a climatización sola seguía
+      // enseñando su demanda de agua caliente y su Qusable (no se puede declarar un ACS que no
+      // existe), y los documentos salían con esa parte dentro. Este es el «recorte»: sin ACS que
+      // declarar, esos cuatro campos se quedan en blanco.
+      for (const campo of CAMPOS_QUE_SOLO_TIENEN_SENTIDO_CON_ACS) {
+        if (tramite[campo] != null) (cambios as any)[campo] = null;
+      }
+      return cambios;
+    }
 
     const acs = demandaAcs({
       tipoEdificio: tramite.tipo_edificio,

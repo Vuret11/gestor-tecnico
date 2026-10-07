@@ -269,6 +269,7 @@ export function contextoMod315(
     esAnteriorRd1027_2007: t.es_anterior_rd ?? null,
     tipoEnergia: tipoEnergiaDelTramite(t),
     tipoInstalacion: tipoInstalacionDelTramite(t),
+    esAireAcondicionado: uso === TipoUsoMaquina.SOLO_CLIMATIZACION,
     tipoEmisor: emisores[0] ?? null,
     tipoEmisores: emisores,
     superficieM2: t.superficie ?? null,
