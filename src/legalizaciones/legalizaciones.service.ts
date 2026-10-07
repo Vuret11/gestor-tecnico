@@ -32,8 +32,10 @@ export class LegalizacionesService {
     private readonly calculo: CalcularTramiteService,
   ) {}
 
-  async findAll(f: { estado?: EstadoLegalizacion; responsable?: string }) {
-    const where: any = { activo: true };
+  async findAll(f: { estado?: EstadoLegalizacion; responsable?: string; conArchivados?: boolean }) {
+    // Sin `conArchivados` solo salen las instalaciones vivas (lo archivado está fuera del panel);
+    // el LISTADO del final de la pantalla sí las pide, porque es el registro de lo tramitado.
+    const where: any = f.conArchivados ? {} : { activo: true };
     if (f.estado) where.estado = f.estado;
     if (f.responsable) where.responsable = f.responsable;
     const tramites = await this.repo.find({ where, order: { id_externo: 'ASC' } });

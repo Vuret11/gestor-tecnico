@@ -19,8 +19,17 @@ export class LegalizacionesController {
   @ApiOperation({ summary: 'Listar expedientes de legalización' })
   @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Get()
-  findAll(@Query('estado') estado?: EstadoLegalizacion, @Query('responsable') responsable?: string) {
-    return this.service.findAll({ estado, responsable });
+  findAll(
+    @Query('estado') estado?: EstadoLegalizacion,
+    @Query('responsable') responsable?: string,
+    /**
+     * `archivados=1` incluye también las instalaciones archivadas. Lo pide el LISTADO del final de
+     * Legalizaciones (Salva, 7-oct-2026: «un listado tipo el de la imagen»), que es el registro de lo
+     * ya tramitado: por defecto se queda fuera lo archivado, como en el resto del panel.
+     */
+    @Query('archivados') archivados?: string,
+  ) {
+    return this.service.findAll({ estado, responsable, conArchivados: archivados === '1' });
   }
 
   @ApiOperation({ summary: 'Resumen del apartado (estado, provincia, responsable, documentos)' })
