@@ -21,4 +21,12 @@ export class CreateProyectoDto {
   @IsOptional() @IsUUID() tecnico_id?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) disciplinas?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) responsables?: string[];
+  // Importes y márgenes de la obra
+  @IsOptional() @IsNumber() margen_previsto?: number;
+  @IsOptional() @IsNumber() margen_real?: number;
+  @IsOptional() @IsNumber() importe_facturado?: number;
+  @IsOptional() @IsString() retencion_estado?: string;
+  @IsOptional() @IsDateString() retencion_fecha?: string;
+  @IsOptional() @IsNumber() retencion_importe?: number;
+  @IsOptional() @IsUUID() cliente_id?: string;
 }

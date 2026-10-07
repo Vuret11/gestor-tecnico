@@ -9,6 +9,8 @@ export class CreateTareaDto {
   @IsOptional() @IsString() disciplina?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) responsables?: string[];
   @IsOptional() @IsDateString() fecha_limite?: string;
+  /** El día en que hay que empezar la tarea («Inicio» en el panel). Vacío = sin planificar. */
+  @IsOptional() @IsDateString() fecha_inicio?: string;
   @IsOptional() @IsUUID() proyecto_id?: string;
   @IsOptional() @IsUUID() operario_id?: string;
 }

@@ -27,10 +27,19 @@ import { VisitaArticulo } from './inventario/entities/visita-articulo.entity';
 import { IngenieriaModule } from './ingenieria/ingenieria.module';
 import { TareasModule } from './tareas/tareas.module';
 import { LegalizacionesModule } from './legalizaciones/legalizaciones.module';
+import { HomologacionesModule } from './homologaciones/homologaciones.module';
+import { Homologacion } from './homologaciones/entities/homologacion.entity';
 import { MaquinasModule } from './maquinas/maquinas.module';
 import { ProyectoIngenieria } from './ingenieria/entities/proyecto-ingenieria.entity';
+import { FaseObra } from './ingenieria/entities/fase-obra.entity';
+import { Retencion } from './ingenieria/entities/retencion.entity';
+import { MedicionDesviacion } from './ingenieria/entities/medicion-desviacion.entity';
+import { DocumentoObra } from './ingenieria/entities/documento-obra.entity';
+import { HitoObra } from './ingenieria/entities/hito-obra.entity';
+import { NotaObra } from './ingenieria/entities/nota-obra.entity';
 import { Tarea } from './tareas/entities/tarea.entity';
 import { Legalizacion } from './legalizaciones/entities/legalizacion.entity';
+import { ConfigDocumentos } from './legalizaciones/documentos/config-documentos.entity';
 import { PlanProvincia } from './planificacion/entities/plan-provincia.entity';
 import { PlanTecnico } from './planificacion/entities/plan-tecnico.entity';
 import { PlanCliente } from './planificacion/entities/plan-cliente.entity';
@@ -90,9 +99,17 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
       Almacen,
       VisitaArticulo,
       ProyectoIngenieria,
+      FaseObra,
+      HitoObra,
+      NotaObra,
+      Retencion,
+      MedicionDesviacion,
+      DocumentoObra,
       Tarea,
       Legalizacion,
+      Homologacion,
       Maquina,
+      ConfigDocumentos,
     ],
         synchronize: config.get('DB_SYNC') === 'true',
         logging: config.get('NODE_ENV') === 'development',
@@ -115,6 +132,7 @@ import { VisitaRespuesta } from './checklists/entities/visita-respuesta.entity';
     IngenieriaModule,
     TareasModule,
     LegalizacionesModule,
+    HomologacionesModule,
     MaquinasModule,
     NotificationsModule,
   ],

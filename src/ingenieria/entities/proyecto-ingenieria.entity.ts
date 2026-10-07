@@ -78,6 +78,38 @@ export class ProyectoIngenieria {
   @Column({ nullable: true, type: 'text' })
   notas: string;
 
+  // ── Importes y márgenes de la obra ──────────────────────────────────────────────────────────
+  // Una obra pasa a «Finalizadas» cuando termina su fase «Finalización obra». Los márgenes se
+  // guardan en % (es lo que se pide en el cuadro: «margen final medio» por cliente).
+
+  /** Margen previsto al presupuestar la obra (%). */
+  @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
+  margen_previsto: number | null;
+
+  /** Margen real una vez cerrada la obra (%). Vacío hasta tener costes: pedidos y mano de obra. */
+  @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
+  margen_real: number | null;
+
+  /** Importe facturado al cliente (€). */
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  importe_facturado: number | null;
+
+  /** Retención de garantía: 'pendiente' de liberar o 'liberada'. */
+  @Column({ type: 'varchar', nullable: true })
+  retencion_estado: string | null;
+
+  /** Fecha de la retención: la prevista de liberación cuando está pendiente, o la de liberación. */
+  @Column({ type: 'date', nullable: true })
+  retencion_fecha: Date | null;
+
+  /** Importe retenido (€). */
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  retencion_importe: number | null;
+
+  /** Cliente del registro de clientes (la obra lo guarda además como texto, por si no está dado de alta). */
+  @Column({ type: 'uuid', nullable: true })
+  cliente_id: string | null;
+
   // Disciplinas de la obra (mismo vocabulario que el registro de obras):
   // solar, electricidad, climatizacion, fontaneria, ventilacion, saneamiento, pci, telecom, aerotermia
   @Column({ type: 'simple-array', nullable: true })

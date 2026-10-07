@@ -26,8 +26,16 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
+  // CORS: CORS_ORIGIN admite varios orígenes separados por comas (el panel se abre
+  // por IP, por nombre .local o por localhost según el dispositivo). Sin cabecera
+  // Origin (curl, apps móviles, healthchecks) se permite.
+  const origenes = (process.env.CORS_ORIGIN || 'http://localhost:3001')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+    origin: (origin, callback) => callback(null, !origin || origenes.includes(origin)),
     credentials: true,
   });
 

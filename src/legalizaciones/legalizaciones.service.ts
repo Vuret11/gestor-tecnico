@@ -3,10 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Legalizacion, EstadoLegalizacion } from './entities/legalizacion.entity';
 import { CreateLegalizacionDto, UpdateLegalizacionDto } from './dto/legalizacion.dto';
+import { GeneradorDocumentosService } from './documentos/generador.service';
+import { CalcularTramiteService } from './documentos/motor/calcular-tramite.service';
+import { TramiteParaDocumentos, datosQueFaltan } from './documentos/armador';
 
 @Injectable()
 export class LegalizacionesService {
-  constructor(@InjectRepository(Legalizacion) private repo: Repository<Legalizacion>) {}
+  constructor(
+    @InjectRepository(Legalizacion) private repo: Repository<Legalizacion>,
+    private readonly generador: GeneradorDocumentosService,
+    private readonly calculo: CalcularTramiteService,
+  ) {}
 
   findAll(f: { estado?: EstadoLegalizacion; responsable?: string }) {
     const where: any = { activo: true };
@@ -21,18 +28,42 @@ export class LegalizacionesService {
     return l;
   }
 
-  create(dto: CreateLegalizacionDto): Promise<Legalizacion> {
+  async create(dto: CreateLegalizacionDto): Promise<Legalizacion> {
     // FECHA_INICIO_AUTOMATICA: el tramite empieza el dia que se crea (no se teclea)
     if (!dto.fecha_inicio) dto.fecha_inicio = new Date().toISOString().slice(0, 10);
     const l = new Legalizacion();
     Object.assign(l, dto);
-    return this.repo.save(l);
+    // Los cálculos del CTE (demanda de ACS, Qusable y Eres) los pone el programa, no el instalador.
+    Object.assign(l, await this.calculo.calcular(l));
+    const guardado = await this.repo.save(l);
+    return (await this.generarSiProcede(guardado)) ?? guardado;
   }
 
   async update(id: string, dto: UpdateLegalizacionDto): Promise<Legalizacion> {
     const l = await this.findOne(id);
     Object.assign(l, dto);
-    return this.repo.save(l);
+    Object.assign(l, await this.calculo.calcular(l));
+    const guardado = await this.repo.save(l);
+    return (await this.generarSiProcede(guardado)) ?? guardado;
+  }
+
+  /**
+   * AUTO-GENERACION DE DOCUMENTOS (pedido de Salva, 2-oct-2026): «cuando se cree una instalacion
+   * y se pongan los datos se deben generar los documentos».
+   *
+   * En cuanto el tramite tiene los datos imprescindibles, los seis documentos se generan y se
+   * guardan solos (carpeta `data/documentos-legalizacion/<id>/`). Nunca tumba el alta ni la
+   * edicion: si falta configuracion o un documento falla, el tramite se guarda igual y se puede
+   * regenerar desde la ficha del tramite.
+   */
+  private async generarSiProcede(tramite: Legalizacion): Promise<Legalizacion | null> {
+    if (datosQueFaltan(tramite as unknown as TramiteParaDocumentos).length > 0) return null;
+    try {
+      await this.generador.generarYGuardarTodos(tramite.id);
+      return await this.repo.findOne({ where: { id: tramite.id } });
+    } catch {
+      return null;
+    }
   }
 
   async remove(id: string): Promise<void> {
@@ -74,11 +105,13 @@ export class LegalizacionesService {
       const existe = await this.repo.findOne({ where: { id_externo: dto.id_externo } });
       if (existe) {
         Object.assign(existe, dto);
+        Object.assign(existe, await this.calculo.calcular(existe));
         await this.repo.save(existe);
         actualizados++;
       } else {
         const l = new Legalizacion();
         Object.assign(l, dto);
+        Object.assign(l, await this.calculo.calcular(l));
         await this.repo.save(l);
         creados++;
       }

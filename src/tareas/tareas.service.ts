@@ -26,6 +26,7 @@ export class TareasService {
   create(dto: CreateTareaDto): Promise<Tarea> {
     const t = new Tarea();
     Object.assign(t, dto);
+    if (t.estado === EstadoTarea.EN_CURSO || t.estado === EstadoTarea.HECHA) t.iniciada_en = new Date();
     if (t.estado === EstadoTarea.HECHA) t.completada_en = new Date();
     return this.repo.save(t);
   }
@@ -33,8 +34,14 @@ export class TareasService {
   async update(id: string, dto: UpdateTareaDto): Promise<Tarea> {
     const t = await this.findOne(id);
     Object.assign(t, dto);
-    if (t.estado === EstadoTarea.HECHA && !t.completada_en) t.completada_en = new Date();
-    if (t.estado !== EstadoTarea.HECHA) t.completada_en = null as any;
+    // Las fechas se ponen solas: no hay que teclearlas desde el panel.
+    if (t.estado === EstadoTarea.EN_CURSO && !t.iniciada_en) t.iniciada_en = new Date();
+    if (t.estado === EstadoTarea.HECHA) {
+      if (!t.iniciada_en) t.iniciada_en = new Date();
+      if (!t.completada_en) t.completada_en = new Date();
+    } else {
+      t.completada_en = null as any;
+    }
     if (dto.operario_id) t.operario = { id: dto.operario_id } as any;
     return this.repo.save(t);
   }

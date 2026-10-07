@@ -37,6 +37,20 @@ export class Tarea {
   @Column({ type: 'date', nullable: true })
   fecha_limite: Date;
 
+  /**
+   * El día en que hay que EMPEZAR la tarea (lo pone quien la asigna, en el panel: «Inicio»).
+   * No confundir con `iniciada_en`, que es cuándo se puso en marcha de verdad: la fecha de inicio
+   * se planifica, `iniciada_en` se fecha sola al pasar la tarea a «en curso».
+   * Lo pidió Salva el 7-oct-2026: «en las tareas hace falta la pestaña de inicio».
+   */
+  @Column({ type: 'date', nullable: true })
+  fecha_inicio: Date;
+
+  /** Cuándo se puso en marcha (se fecha sola al pasar la tarea a «en curso»). */
+  @Column({ type: 'timestamp', nullable: true })
+  iniciada_en: Date;
+
+  /** Cuándo se terminó (se fecha sola al pasar la tarea a «hecha»). */
   @Column({ type: 'timestamp', nullable: true })
   completada_en: Date;
 

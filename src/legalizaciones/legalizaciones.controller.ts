@@ -37,7 +37,9 @@ export class LegalizacionesController {
   }
 
   @ApiOperation({ summary: 'Crear expediente' })
-  @Roles(Rol.ADMIN, Rol.OFICINA)
+  // Los ingenieros son de rol TECNICO y son quienes hacen las legalizaciones: sin esto recibían un
+  // 403 al pulsar «Crear trámite» y el panel no lo decía (el botón parecía no hacer nada).
+  @Roles(Rol.ADMIN, Rol.OFICINA, Rol.TECNICO)
   @Post()
   create(@Body() dto: CreateLegalizacionDto) {
     return this.service.create(dto);
